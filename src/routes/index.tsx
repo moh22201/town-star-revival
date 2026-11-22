@@ -1,23 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-// The home route ships no og:image, so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "قريتي — لعبة بناء وإنتاج" },
+      { name: "description", content: "ابنِ قريتك، ازرع الحقول، شغّل المصانع وبِع منتجاتك في لعبة بناء واقتصاد مستوحاة من Town Star." },
+      { property: "og:title", content: "قريتي — لعبة بناء وإنتاج" },
+      { property: "og:description", content: "ازرع، اصنع، وبِع: سلسلة إنتاج كاملة في قرية متحركة." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <main className="fixed inset-0 bg-background">
+      <h1 className="sr-only">قريتي</h1>
+      <iframe src="/game/index.html" title="قريتي" className="h-full w-full border-0" />
+    </main>
   );
 }
