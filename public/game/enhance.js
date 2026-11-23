@@ -75,3 +75,24 @@ ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
  RC['Candy Shop']={...RC['Candy Shop'],in:{sugar:1,mint:1},out:'candy',ic:{sugar:10,mint:10}};
  RC['Chocolate Shop']={...RC['Chocolate Shop'],in:{cocoa:1,sugar:1,milk:1},out:'choco',ic:{cocoa:10,sugar:10,milk:10}};
 })();
+
+/* ===== مخزن الوقود بالصورة الجديدة ===== */
+(function(){
+ const _dc=DRAW.cat;
+ DRAW.cat=(o,t)=>{const d=ITEMS[o.ci];
+  if(d&&d[2]=='Fuel Storage'){const im=wicon(o.ci);if(im&&im.width==480){const z=o.fw,[sx,sy]=P(o.x+z/2,o.y+z/2),k=.8*z;
+   if(o.act===false)ctx.globalAlpha=.55;ell(sx+9*k,sy+4*k,40*k,16*k,'rgba(0,0,0,.2)');ctx.drawImage(im,sx-60*k,sy-64*k,120*k,90*k);ctx.globalAlpha=1;
+   try{if(typeof ovl=='function')ovl(o,t)}catch(e){}return}}
+  return _dc(o,t)};
+})();
+
+/* ===== العمال: لا سقي لحقل مسقي ===== */
+(function(){
+ const _plan=plan;
+ plan=function(w){const s=_plan(w);w.wt=null;
+  const k=s&&w.ks&&w.ks[0];if(k&&(k[0]=='w'||k[0]=='p')&&s.some(x=>x.st=='water')){const id=+k.slice(1);w.wt=objs.find(o=>o.uid===id)||null;w.wk=k[0]}
+  return s};
+ const stale=w=>w.steps&&w.wt&&(w.wk=='w'?w.wt.st!==0:!w.wt.nw)||(w.wt&&objs.indexOf(w.wt)<0);
+ const guard=f=>function(w,dt){if(stale(w)){w.wt=null;fin(w);w.car=null;w.st='idle'}return f(w,dt)};
+ aiH=guard(aiH);aiR=guard(aiR);
+})();
