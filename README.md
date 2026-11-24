@@ -1,14 +1,22 @@
-# Welcome to your Lovable project
+# Town Star Revival
+
+انظر في الملف فيه لعبة town star 
+
+اريد منك تحسين مشهد اللعبة إلى احترافي من حيث الخلفية و ألمنشاة و العمال و المصانع يجب أن تعطي رسومات ناعمة بتفاصيل واضحة جميلة مثل العاب الحديثة و ليس مجسمات هندسية 
+
+و تحسين واجهة اللعبة 
+
+كما يمكنك استدلال بمرجع دليل تاون ستار الحقيقية لاكمال النفائص او حذف الزائد الذي لا يربط سلسلة الإنتاج و الإقتصاد
 
 This project was built with [Lovable](https://lovable.dev).
 
 ## Build with Lovable
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/2b54ec53-7bea-4655-ac39-f3bff8938f6d).
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
 
@@ -20,10 +28,3 @@ cd <repository-name>
 npm i
 npm run dev
 ```
-
-## Built with
-
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
