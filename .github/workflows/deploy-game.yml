@@ -37,7 +37,10 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: public/game
+          name: qaryati-pages-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Publish game
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: qaryati-pages-${{ github.run_id }}-${{ github.run_attempt }}
