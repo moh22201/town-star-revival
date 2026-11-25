@@ -50,7 +50,6 @@ const NAMES=['متاح للبناء ✓','طريق','بركة ماء','مبنى'
 const objs=[];
 [[22,5,1.7],[33,6,2.3],[6,15,2],[32,16,1.8],[16,13,1.4]].forEach(([cx,cy,r])=>{
  for(let x=0;x<W;x++)for(let y=0;y<H;y++)if(Math.hypot(x+.5-cx,y+.5-cy)<r+(hs(x,y,3)-.5)*.9)T[x][y]=2});
-for(let x=6;x<=15;x++)T[x][5]=1;
 
 for(let x=0;x<W;x++)for(let y=0;y<H;y++){
  if(x>=40||y>=25||T[x][y])continue;
@@ -62,16 +61,11 @@ for(let x=0;x<W;x++)for(let y=0;y<H;y++){
   if(y>=20&&rnd()<.4)objs.push({k:'tree',x:x+.5+(rnd()-.5)*.8,y:y+.5+(rnd()-.5)*.8,s:.7+rnd()*.4,pine:rnd()>.4,v:rnd()});
  }else if(y<20&&rnd()<.04){T[x][y]=5;objs.push({k:'rock',x:x+.5,y:y+.5,s:.8+rnd()*.5})}
 }
-objs.push({k:'house',x:7,y:2,fw:2,fd:2,mv:1,c:[243,228,196],rc:[196,72,52],door:[.4,.62],wins:[[.08,.28],[.72,.92]],bw:[.3,.7],beam:1,shut:1,flower:1});
-objs.push({k:'house',x:10,y:2,fw:2,fd:2,mv:1,c:[160,110,68],rc:[58,112,86],door:[.1,.32],wins:[[.46,.66],[.76,.94]],bw:[.3,.7],log:1,shut:0});
-objs.push({k:'silo',x:13,y:2,fw:2,fd:2,mv:1});
 const OBJ=Array.from({length:W},()=>Array(H).fill(null));let placing=null,mov=null,wood=0,crop=0,bat=0,money=1000000;
 const dep=o=>o.x+o.y+((o.fw||0)+(o.fd||0))/2-(o.role=='field'?.6:0);
 function occ(o,on){if(o.nocc)return;for(let i=0;i<(o.fw||1);i++)for(let j=0;j<(o.fd||1);j++){const x=o.x+i,y=o.y+j;OBJ[x][y]=on?o:null;T[x][y]=on?(o.role=='field'?6:3):0}}
 objs.filter(o=>o.mv).forEach(o=>occ(o,1));
 const SHORE=[];for(let x=0;x<W;x++)for(let y=0;y<H;y++)if(T[x][y]<2&&[[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>x+a>=0&&y+b>=0&&x+a<W&&y+b<H&&T[x+a][y+b]==2))SHORE.push({x:x+.5,y:y+.5});
-[[objs.find(o=>o.log),'wood'],[objs.find(o=>o.beam),'farm']].forEach(([h,r])=>objs.push({k:'worker',role:r,home:h,x:h.x+h.fw/2+.02,y:h.y+h.fd+.55,st:'idle',tm:0,car:null,fx:1,mvg:0,walk:false}));
-objs.filter(o=>o.k=='house'||o.k=='silo').forEach(o=>{occ(o,0);objs.splice(objs.indexOf(o),1)});
 $('cnt').textContent=`${W*H} مربع (${W}×${H}) · متاح: ${T.reduce((s,c)=>s+c.reduce((a,v)=>a+(v==0),0),0)}`;
 
 /* ---------- tiles ---------- */
@@ -311,6 +305,7 @@ function frame0(t){const dt=Math.min(.05,(t-(frame.l||t))/1000);frame.l=t;try{up
  ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);
  ctx.setTransform(dpr*cam.s,0,0,dpr*cam.s,dpr*cam.x,dpr*cam.y);
  bgDyn(t);{const m=90*cam.s;for(let y=0;y<H;y++)for(let x=0;x<W;x++){const sx=cam.x+(x-y)*TW/2*cam.s,sy=cam.y+(x+y+1)*TH/2*cam.s;if(sx<-m||sx>cw+m||sy<-m*1.5||sy>ch+m*2)continue;tile(x,y,t)}};
+ objs.filter(o=>o.k=='veh'&&o.role=='truck'&&o.edge&&!o.away).forEach(drawTruckEdgeRoad);
  if(grid){ctx.strokeStyle='rgba(255,255,255,.28)';ctx.lineWidth=1;for(let y=0;y<H;y++)for(let x=0;x<W;x++)poly([[x,y],[x+1,y],[x+1,y+1],[x,y+1]],null,'rgba(255,255,255,.28)')}
  objs.forEach(o=>o.d=dep(o));objs.sort((a,b)=>a.d-b.d);objs.forEach(o=>{if(vis(o)){try{DRAW[o.k](o,t)}catch(e){__rep(e,o.k+':'+((ITEMS[o.ci]||[])[2]||''));ctx.setTransform(dpr*cam.s,0,0,dpr*cam.s,dpr*cam.x,dpr*cam.y)}}});lighting(t);vig();if(mov)poly([[mov.x,mov.y],[mov.x+mov.fw,mov.y],[mov.x+mov.fw,mov.y+mov.fd],[mov.x,mov.y+mov.fd]],'rgba(255,220,60,.45)','#fff',2);
  if(sel){const v=T[sel.x][sel.y];poly([[sel.x,sel.y],[sel.x+1,sel.y],[sel.x+1,sel.y+1],[sel.x,sel.y+1]],v?'rgba(255,80,80,.38)':'rgba(90,255,110,.42)','#fff',2)}
@@ -334,7 +329,7 @@ cv.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?1.12:.89,e.cl
 function pickObj(px,py){for(const z of[0,20,40,62]){const p=pick(px,py+z*cam.s);if(p&&OBJ[p.x][p.y])return OBJ[p.x][p.y]}return null}
 function fits(o,x,y){const fw=o.fw||1,fd=o.fd||1;for(let i=0;i<fw;i++)for(let j=0;j<fd;j++){const a=x+i,b=y+j;if(a<0||b<0||a>=W||b>=H)return false;if(T[a][b]!=0&&OBJ[a][b]!==o)return false}for(let i=-1;i<=fw;i++)for(let j=-1;j<=fd;j++){if(i>=0&&i<fw&&j>=0&&j<fd)continue;const a=x+i,b=y+j;if(a>=0&&b>=0&&a<W&&b<H&&T[a][b]==1)return false}return true}
 function tap(px,py){const p=pick(px,py),info=s=>$('info').textContent=s;
- if(delMode){doDel(px,py,p);return}if(placing){if(!p)return;const d=ITEMS[placing-1];if(d[2]=='Paved Road'||d[2]=='Dirt Road'||d[2]=='Grass Road'){roadAt(p.x,p.y);return}const z=SZ[d[3]]||1,o={k:'cat',ci:placing-1,role:ROLE(d),x:p.x,y:p.y,fw:z,fd:z,mv:1,st:0,t:0};if(o.role=='tractor'||o.role=='truck'){delete o.fw;delete o.fd;o.k='veh';o.x+=.5;o.y+=.5;o.hx=o.x;o.hy=o.y;o.nocc=1;o.mv=0;o.st='idle';o.fx=1}if(!fits(o,p.x,p.y))return info('المربع مشغول');objs.push(o);occ(o,1);return info('تم البناء ✓ — اضغط مربعاً آخر أو أغلق القائمة')}
+ if(delMode){doDel(px,py,p);return}if(placing){if(!p)return;const d=ITEMS[placing-1];if(d[2]=='Paved Road'||d[2]=='Dirt Road'||d[2]=='Grass Road'){roadAt(p.x,p.y);return}const z=SZ[d[3]]||1,o={k:'cat',ci:placing-1,role:ROLE(d),x:p.x,y:p.y,fw:z,fd:z,mv:1,st:0,t:0};if(o.role=='tractor'||o.role=='truck'){delete o.fw;delete o.fd;o.k='veh';o.x+=.5;o.y+=.5;o.hx=o.x;o.hy=o.y;o.nocc=1;o.mv=0;o.st='idle';o.fx=1;if(o.role=='truck'){const edge=p.y==0?'top':p.y==H-1?'bottom':p.x==0?'left':p.x==W-1?'right':null;if(!edge)return info('ضع شاحنة البيع على حدود اليابسة فقط');if(T[p.x][p.y]==2)return info('اختر نقطة على حدود اليابسة بعيداً عن الماء');if(OBJ[p.x][p.y])return info('هذا الموضع مشغول بمنشأة');objs.filter(q=>(q.k=='tree'||q.k=='rock')&&Math.floor(q.x)==p.x&&Math.floor(q.y)==p.y).forEach(q=>objs.splice(objs.indexOf(q),1));T[p.x][p.y]=0;o.edge=edge;objs.push(o);return info('تم وضع الشاحنة على حدود اليابسة وإضافة الطريق الخارجي ✓')}}if(!fits(o,p.x,p.y))return info('المربع مشغول');objs.push(o);occ(o,1);return info('تم البناء ✓ — اضغط مربعاً آخر أو أغلق القائمة')}
  if(mov){if(p&&OBJ[p.x][p.y]===mov){mov=null;return info('أُلغي التحديد')}if(p&&fits(mov,p.x,p.y)){occ(mov,0);mov.x=p.x;mov.y=p.y;occ(mov,1);mov=null;return info('تم النقل ✓')}return info('لا يتسع هنا — اختر مكاناً فارغاً')}
  const o=pickObj(px,py);if(o&&o.mv){mov=o;sel=null;return info(descr(o)+' | '+'حُدّد للنقل — اضغط مربعاً فارغاً (يصبح الزاوية العلوية)')}
  sel=p;info(p?`المربع (${p.x+1}، ${p.y+1}) — ${NAMES[T[p.x][p.y]]}`:'خارج الأرض')}
@@ -527,6 +522,7 @@ $('bd').onclick=e=>{delMode=!delMode;placing=null;mov=null;e.currentTarget.class
 const RT=Array.from({length:W},()=>new Int8Array(H));
 {const r=ITEMS.find(d=>d[2]=='Paved Road');r[1]='طريق معبد (أسفلت)';r[4]='#2c2c32';ITEMS.push([10,'طريق ترابي','Dirt Road','Q','#b8864e','','','d','🟫'])}
 function roadTile(x,y,sq,h){const hx=isR(x-1,y)||isR(x+1,y),hy=isR(x,y-1)||isR(x,y+1),ax=hx||!hy,ay=hy;
+function drawTruckEdgeRoad(o){if(!o.edge||o.away)return;let x=o.x-.5,y=o.y-.5;if(o.edge=='top')y=-1;else if(o.edge=='bottom')y=H;else if(o.edge=='left')x=-1;else x=W;roadTile(x,y,[[x,y],[x+1,y],[x+1,y+1],[x,y+1]],hs(x,y,5));}
  if(RT[x][y]){poly(sq,R([178,136,86],.94+h*.12));const tr=u=>{if(ax)seg([x,y+u],[x+1,y+u],R([140,100,60]),2);if(ay)seg([x+u,y],[x+u,y+1],R([140,100,60]),2)};tr(.34);tr(.66);for(let i=0;i<4;i++){const q=P(x+hs(x,y,i)*.8+.1,y+hs(x,y,i+7)*.8+.1);ell(q[0],q[1],2.2,1.2,R([120,88,56],.8+i*.1))}if(!isR(x,y-1))poly([[x,y],[x+1,y],[x+1,y+.08],[x,y+.08]],R([120,88,56]));if(!isR(x,y+1))poly([[x,y+1],[x+1,y+1],[x+1,y+.92],[x,y+.92]],R([120,88,56]));return}
  poly(sq,R([44,44,50],.95+h*.06));
  if(ax){seg([x+.15,y+.5],[x+.4,y+.5],'#f5f5f5',2);seg([x+.6,y+.5],[x+.85,y+.5],'#f5f5f5',2)}
@@ -542,8 +538,8 @@ K.H=function(a,b,c,f){if(f!='k')return H0(a,b,c,f);GND('#9a9aa0','#6a6a70');
  FP([Pq(.56,-.2,19),Pq(.56,.2,19),Pq(.56,.2,27),Pq(.56,-.2,27)],'#bfe3f4');FP([Pq(.2,.26,19),Pq(.5,.26,19),Pq(.5,.26,27),Pq(.2,.26,27)],'#a9d3ea');FP([Pq(-.58,.26,20),Pq(.1,.26,20),Pq(.1,.26,26),Pq(-.58,.26,26)],SH(a,1));
  [-.17,.17].forEach(v=>EL(...Pq(.56,v,12),3,2.2,'#ffe9a0'));[-.42,-.05,.38].forEach(u=>{const q=Pq(u,.26,6);EL(q[0],q[1],8,8,'#1d1d1f');EL(q[0],q[1],3.5,3.5,'#9aa0a8')})};
 /* ===== حفظ التقدم ===== */
-const SK='village_save_v1';let noSave=false;
-function save(manual){if(noSave)return;try{const pl=objs.filter(o=>o.k=='cat'||o.k=='veh'),F=['k','role','x','y','fw','fd','mv','st','t','out','ores','inv','cap','pg','run','nw','nf','tw','tf','need','oq','sp','hx','hy','nocc','fx','cargo','away'];
+const SK='village_save_v2';let noSave=false;
+function save(manual){if(noSave)return;try{const pl=objs.filter(o=>o.k=='cat'||o.k=='veh'),F=['k','role','x','y','fw','fd','mv','st','t','out','ores','inv','cap','pg','run','nw','nf','tw','tf','need','oq','sp','hx','hy','nocc','fx','cargo','away','edge'];
  const s={v:1,W,H,m:money,rr:[...(window.RM||[])],rd:[],tr:[],pl:pl.map(o=>{const r={nm:ITEMS[o.ci][2]};F.forEach(k=>{if(o[k]!==undefined)r[k]=o[k]});return r}),wk:objs.filter(o=>o.k=='worker').map(w=>({role:w.role,x:w.x,y:w.y,hi:pl.indexOf(w.home),hm:w.home?[w.home.x,w.home.y,w.home.fw,w.home.fd]:null}))};
  for(let x=0;x<W;x++)for(let y=0;y<H;y++)if(T[x][y]==1)s.rd.push([x,y,RT[x][y]]);
  objs.forEach(o=>{if(o.k=='tree')s.tr.push([+o.x.toFixed(2),+o.y.toFixed(2),+o.s.toFixed(2),o.pine?1:0,+o.v.toFixed(2)])});
