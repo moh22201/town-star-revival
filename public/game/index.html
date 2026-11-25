@@ -33,7 +33,7 @@ button:active{transform:translateY(2px);box-shadow:0 1px 0 #1a5c98}
 <div class="btns"><button id="bs" title="حفظ">💾</button><button id="br" title="بداية جديدة">🔄</button><button id="bd" title="حذف">🗑️</button><button id="bg" title="الشبكة">▦</button><button id="bz" title="تقريب">＋</button><button id="bm" title="تبعيد">－</button><button id="bc" title="توسيط">◎</button></div></div>
 <div class="hud bot" style="flex-direction:column;align-items:stretch"><div class="card" id="info">اختر منشأة من الأسفل ثم المس الأرض · المس مبنى لنقله · اسحب للتحريك</div><div class="card" id="pan"><div id="det"></div><div id="items"></div></div><div class="card" id="cat"></div></div>
 <script>
-const W=50,H=40,TW=64,TH=32,$=id=>document.getElementById(id);
+const W=50,H=40,TW=70,TH=35,$=id=>document.getElementById(id);
 const cv=$('c'),ctx=cv.getContext('2d');
 let cw,ch,dpr,cam={x:0,y:0,s:1},grid=false,sel=null;
 const P=(x,y,z=0)=>[(x-y)*TW/2,(x+y)*TH/2-z];
@@ -50,7 +50,7 @@ const NAMES=['متاح للبناء ✓','طريق','بركة ماء','مبنى'
 const objs=[];
 [[22,5,1.7],[33,6,2.3],[6,15,2],[32,16,1.8],[16,13,1.4]].forEach(([cx,cy,r])=>{
  for(let x=0;x<W;x++)for(let y=0;y<H;y++)if(Math.hypot(x+.5-cx,y+.5-cy)<r+(hs(x,y,3)-.5)*.9)T[x][y]=2});
-for(let x=6;x<=15;x++)T[x][4]=1;
+for(let x=6;x<=15;x++)T[x][5]=1;
 
 for(let x=0;x<W;x++)for(let y=0;y<H;y++){
  if(x>=40||y>=25||T[x][y])continue;
@@ -332,7 +332,7 @@ const up=e=>{if(ptrs.has(e.pointerId)&&ptrs.size==1&&moved<8)tap(e.clientX,e.cli
 cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
 cv.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?1.12:.89,e.clientX,e.clientY)},{passive:false});
 function pickObj(px,py){for(const z of[0,20,40,62]){const p=pick(px,py+z*cam.s);if(p&&OBJ[p.x][p.y])return OBJ[p.x][p.y]}return null}
-function fits(o,x,y){for(let i=0;i<(o.fw||1);i++)for(let j=0;j<(o.fd||1);j++){const a=x+i,b=y+j;if(a<0||b<0||a>=W||b>=H)return false;if(T[a][b]!=0&&OBJ[a][b]!==o)return false}return true}
+function fits(o,x,y){const fw=o.fw||1,fd=o.fd||1;for(let i=0;i<fw;i++)for(let j=0;j<fd;j++){const a=x+i,b=y+j;if(a<0||b<0||a>=W||b>=H)return false;if(T[a][b]!=0&&OBJ[a][b]!==o)return false}for(let i=-1;i<=fw;i++)for(let j=-1;j<=fd;j++){if(i>=0&&i<fw&&j>=0&&j<fd)continue;const a=x+i,b=y+j;if(a>=0&&b>=0&&a<W&&b<H&&T[a][b]==1)return false}return true}
 function tap(px,py){const p=pick(px,py),info=s=>$('info').textContent=s;
  if(delMode){doDel(px,py,p);return}if(placing){if(!p)return;const d=ITEMS[placing-1];if(d[2]=='Paved Road'||d[2]=='Dirt Road'||d[2]=='Grass Road'){roadAt(p.x,p.y);return}const z=SZ[d[3]]||1,o={k:'cat',ci:placing-1,role:ROLE(d),x:p.x,y:p.y,fw:z,fd:z,mv:1,st:0,t:0};if(o.role=='tractor'||o.role=='truck'){delete o.fw;delete o.fd;o.k='veh';o.x+=.5;o.y+=.5;o.hx=o.x;o.hy=o.y;o.nocc=1;o.mv=0;o.st='idle';o.fx=1}if(!fits(o,p.x,p.y))return info('المربع مشغول');objs.push(o);occ(o,1);return info('تم البناء ✓ — اضغط مربعاً آخر أو أغلق القائمة')}
  if(mov){if(p&&OBJ[p.x][p.y]===mov){mov=null;return info('أُلغي التحديد')}if(p&&fits(mov,p.x,p.y)){occ(mov,0);mov.x=p.x;mov.y=p.y;occ(mov,1);mov=null;return info('تم النقل ✓')}return info('لا يتسع هنا — اختر مكاناً فارغاً')}
@@ -446,7 +446,7 @@ function roleOf(d){const n=d[2];if(n=='Farm Tractor')return'tractor';if(n=='Sale
 function give(s,r,n){if(!s||!s.inv)return;s.inv[r]=(s.inv[r]||0)+Math.max(0,Math.min(n,s.cap-tot(s)))}
 function dst(r,n,p){const g=RS[r][0];let b=null,bd=1e9;objs.forEach(o=>{if(!ACC[o.role]||o.act===false||!o.inv||!ACC[o.role].includes(g)||tot(o)+(n||1)>o.cap)return;const s=Math.hypot(o.x-p.x,o.y-p.y)+(o.role=='depot'?1000:0);if(s<bd){bd=s;b=o}});return b}
 function onRoad(o){const w=o.fw||1,h=o.fd||1;for(let i=-1;i<=w;i++)for(let j=-1;j<=h;j++){const ix=i>=0&&i<w,jx=j>=0&&j<h;if(ix&&jx)continue;if(!ix&&!jx)continue;const x=o.x+i,y=o.y+j;if(x>=0&&y>=0&&x<W&&y<H&&T[x][y]==1)return true}return false}
-function roadAt(x,y){if((T[x][y]==0&&!OBJ[x][y])||(T[x][y]==1&&RT[x][y]!=(ITEMS[placing-1][2]=='Dirt Road'?1:0))){T[x][y]=1;RT[x][y]=ITEMS[placing-1][2]=='Dirt Road'?1:0;$('info').textContent='تم بناء طريق معبد ✓'}}
+function roadAt(x,y){for(let a=x-1;a<=x+1;a++)for(let b=y-1;b<=y+1;b++)if(a>=0&&b>=0&&a<W&&b<H&&OBJ[a][b]){$('info').textContent='اترك مربعاً فارغاً بين الطريق والمنشأة';return}if((T[x][y]==0&&!OBJ[x][y])||(T[x][y]==1&&RT[x][y]!=(ITEMS[placing-1][2]=='Dirt Road'?1:0))){T[x][y]=1;RT[x][y]=ITEMS[placing-1][2]=='Dirt Road'?1:0;$('info').textContent='تم بناء الطريق ✓'}}
 const isRd=()=>placing&&ITEMS[placing-1]&&/Road/.test(ITEMS[placing-1][2]),paint=(px,py)=>{const p=pick(px,py);if(p)roadAt(p.x,p.y)};
 function descr(o){const d=ITEMS[o.ci];if(!d)return'';let s=d[1];if(NEED.includes(o.role)&&o.act===false)s+=' ⛔ لا يعمل (يحتاج طريقاً أمامه)';if(o.inv){const v=Object.entries(o.inv).filter(a=>a[1]>0).map(a=>RS[a[0]][1]+a[1]).join(' ');if(o.cap)s+=' | '+tot(o)+'/'+o.cap+' '+v;else if(v)s+=' | '+v}if(o.role=='pen'&&(o.nw||o.nf>0))s+=' | يحتاج: '+(o.nw?'💧 ':'')+(o.nf>0?'🌾×'+o.nf:'');if(o.out)s+=' | ناتج: '+RS[o.ores][1]+'×'+o.out;return s}
 K.Q=function(a){GND();FP([[60,48],[96,66],[60,84],[24,66]],a);const A=[24,66],B=[60,48],C=[96,66],D=[60,84];for(let i=1;i<4;i++){const t=i/4;LN(A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t,D[0]+(C[0]-D[0])*t,D[1]+(C[1]-D[1])*t,'#76767c',1.2);LN(A[0]+(D[0]-A[0])*t,A[1]+(D[1]-A[1])*t,B[0]+(C[0]-B[0])*t,B[1]+(C[1]-B[1])*t,'#76767c',1.2)}};
