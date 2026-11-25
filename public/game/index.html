@@ -889,7 +889,7 @@ setInterval(()=>{objs.forEach(p=>{if(p.role!='well'||!p.fw||ITEMS[p.ci][2]!='Wel
 function thrDraw(){const n=performance.now();for(let i=THR.length-1;i>=0;i--){const a=THR[i];if(n<a.s)continue;const k=(n-a.s)/a.d;if(k>=1){THR.splice(i,1);continue}const p=P(a.a[0]+(a.b[0]-a.a[0])*k,a.a[1]+(a.b[1]-a.a[1])*k),yy=p[1]-Math.sin(k*Math.PI)*80-14;ctx.font='17px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#000';ctx.fillText(a.ic,p[0],yy)}}
 function sendTruck(){toast('الإرسال تلقائي: عند وجود 10 وحدات نهائية قابلة للبيع في مستودع، تُرمى إلى الشاحنة (10 براميل نفط)')}
 /* final (manufactured) products only; raw crops, ores, animal products, feed, fuel and energy are never sold */
-const FINAL=new Set(['bread','cake','candy','choco','wine','meal','jam','plank','fabric','pot','glass','steel']),SELL=k=>FINAL.has(k)&&price(k)>0,TRIP=40;
+const FINAL=new Set(['flour','bread','cake','candy','choco','wine','meal','jam','plank','fabric','pot','glass','steel','fuel','bat','egg','milk','wool','honey']),SELL=k=>FINAL.has(k)&&price(k)>0,TRIP=40;
 Object.assign(PREF,{bread:['wh'],cake:['wh'],candy:['wh'],choco:['wh'],wine:['wh'],meal:['wh'],jam:['wh'],plank:['wh'],fabric:['wh'],pot:['wh'],glass:['wh']});
 const _dv=DRAW.veh;DRAW.veh=(o,t)=>{if(o.hid)return;_dv(o,t)};
 function truckSell(o){let best=null,bn=0,mx=0;
