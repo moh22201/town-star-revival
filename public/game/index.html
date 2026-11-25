@@ -549,14 +549,16 @@ function save(manual){if(noSave)return;try{const pl=objs.filter(o=>o.k=='cat'||o
  objs.forEach(o=>{if(o.k=='tree')s.tr.push([+o.x.toFixed(2),+o.y.toFixed(2),+o.s.toFixed(2),o.pine?1:0,+o.v.toFixed(2)])});
  localStorage.setItem(SK,JSON.stringify(s));if(manual)$('info').textContent='💾 تم حفظ التقدم'}catch(e){if(manual)$('info').textContent='تعذّر الحفظ في هذا المتصفح'}}
 function load(){let s=null;try{s=JSON.parse(localStorage.getItem(SK))}catch(e){}if(!s||s.v!=1)return;
- const ow=s.W||40,oh=s.H||25;window.LF=ow==W&&oh==H;for(let x=0;x<ow;x++)for(let y=0;y<oh;y++){if(T[x][y]==1||T[x][y]==4)T[x][y]=0}
- s.rd.forEach(([x,y,t])=>{T[x][y]=1;RT[x][y]=t});
- for(let i=objs.length-1;i>=0;i--){const k=objs[i].k;if((k=='tree'&&objs[i].x<ow&&objs[i].y<oh)||k=='worker'||k=='cat'||k=='veh')objs.splice(i,1)}
- s.tr.forEach(([x,y,sc,p,v])=>{objs.push({k:'tree',x,y,s:sc,pine:!!p,v});T[Math.floor(x)][Math.floor(y)]=4});
- const pl=s.pl.map(r=>{if(r.nm=='Worker House')return null;const ci=ITEMS.findIndex(d=>d[2]==r.nm);if(ci<0)return null;const o=Object.assign({},r,{ci});delete o.nm;o.role=roleOf(ITEMS[ci]);if(o.k=='veh'){o.st='idle';o.away=0;o.car=0;o.tm=0;if(o.cargo){money+=o.cargo*10;o.cargo=0}}objs.push(o);if(o.k=='cat')occ(o,1);return o});
- money=s.m;window.RM=new Set(s.rr||[]);
- s.wk.forEach(r=>{const home=pl[r.hi]||(r.hm?{x:r.hm[0],y:r.hm[1],fw:r.hm[2],fd:r.hm[3]}:null);if(r.role=='hand'||(home&&home.role=='whouse'))return;objs.push({k:'worker',role:(home&&home.role=='fhouse'?'farm':r.role),home,x:r.x,y:r.y,st:'idle',tm:0,car:null,fx:1,mvg:0,walk:false})});
- $('info').textContent='✅ تم استرجاع التقدم المحفوظ'}
+ const ow=Number(s.W)||W,oh=Number(s.H)||H;window.LF=ow==W&&oh==H;
+ // ترحيل الحفظ القديم إلى حدود الخريطة الحالية دون الوصول إلى خلايا خارج المصفوفة.
+ for(let x=0;x<W;x++)for(let y=0;y<H;y++)if(T[x][y]==1||T[x][y]==4)T[x][y]=0;
+ (Array.isArray(s.rd)?s.rd:[]).forEach(([x,y,t])=>{if(Number.isInteger(x)&&Number.isInteger(y)&&x>=0&&y>=0&&x<W&&y<H){T[x][y]=1;RT[x][y]=t}});
+ for(let i=objs.length-1;i>=0;i--){const k=objs[i].k;if(k=='tree'||k=='worker'||k=='cat'||k=='veh')objs.splice(i,1)}
+ (Array.isArray(s.tr)?s.tr:[]).forEach(([x,y,sc,p,v])=>{const tx=Math.floor(x),ty=Math.floor(y);if(Number.isFinite(x)&&Number.isFinite(y)&&tx>=0&&ty>=0&&tx<W&&ty<H){objs.push({k:'tree',x,y,s:sc,pine:!!p,v});T[tx][ty]=4}});
+ const pl=(Array.isArray(s.pl)?s.pl:[]).map(r=>{if(!r||r.nm=='Worker House')return null;const ci=ITEMS.findIndex(d=>d[2]==r.nm);if(ci<0)return null;const x=Number(r.x),y=Number(r.y),fw=Math.max(1,Number(r.fw)||1),fd=Math.max(1,Number(r.fd)||1);if(!Number.isFinite(x)||!Number.isFinite(y)||x<0||y<0||x+fw>W||y+fd>H)return null;const o=Object.assign({},r,{ci});delete o.nm;o.role=roleOf(ITEMS[ci]);if(o.k=='veh'){o.st='idle';o.away=0;o.car=0;o.tm=0;if(o.cargo){money+=o.cargo*10;o.cargo=0}}objs.push(o);if(o.k=='cat')occ(o,1);return o});
+ if(Number.isFinite(Number(s.m)))money=Number(s.m);window.RM=new Set(Array.isArray(s.rr)?s.rr:[]);
+ (Array.isArray(s.wk)?s.wk:[]).forEach(r=>{if(!r||!Number.isFinite(Number(r.x))||!Number.isFinite(Number(r.y))||r.x<0||r.y<0||r.x>=W||r.y>=H)return;const home=pl[r.hi]||(r.hm?{x:r.hm[0],y:r.hm[1],fw:r.hm[2],fd:r.hm[3]}:null);if(r.role=='hand'||(home&&home.role=='whouse'))return;objs.push({k:'worker',role:(home&&home.role=='fhouse'?'farm':r.role),home,x:r.x,y:r.y,st:'idle',tm:0,car:null,fx:1,mvg:0,walk:false})});
+ $('info').textContent='✅ تم استرجاع التقدم المحفوظ ضمن حدود الأرض الحالية'}
 let rq=0;$('bs').onclick=()=>save(true);
 $('br').onclick=()=>{if(Date.now()<rq){noSave=true;try{localStorage.removeItem(SK)}catch(e){}location.reload();return}rq=Date.now()+4000;$('info').textContent='⚠️ اضغط 🔄 مرة ثانية خلال 4 ثوانٍ لمسح التقدم والبدء من جديد'};
 load();setInterval(()=>save(),5000);addEventListener('pagehide',()=>save());document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
