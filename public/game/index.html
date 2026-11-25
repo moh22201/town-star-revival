@@ -651,7 +651,7 @@ CAP.silo=200;CAP.wh=2000;
 RC['Windmill']={in:{wheat:10,wood:1},out:'flour',ic:{wheat:50,wood:5},oc:50};
 RC['Feed Mill']={in:{wheat:2,corn:1},out:'feed',ic:{wheat:20,corn:10},oc:20};
 RC['Steel Mill']={in:{ore:5},out:'steel',ic:{ore:100},oc:20};
-RC['Refinery']={in:{oil:1},out:'fuel',outs:[['fuel',2]],ic:{oil:100},oc:100};
+RC['Refinery']={in:{oil:1},out:'fuel',outs:[['fuel',2]],ic:{oil:100},oc:100,t:10};
 const icap=(rc,r)=>(rc.ic&&rc.ic[r])||rc.in[r]*3;
 const FARMN=new Set(['Windmill','Feed Mill','Bakery','Cakery','Candy Shop','Chocolate Shop','Winery','Cafe','Beekeeper House','Beehive']);
 const dom=o=>(o.role=='field'||o.role=='pen'||FARMN.has(ITEMS[o.ci][2]))?'farm':'hand';
@@ -751,7 +751,7 @@ function rDet(o){if(!o)return'';if(o.k=='rock')return `<div class='row'><span st
  h+=kv('الموقع','('+(Math.floor(o.x)+1)+'، '+(Math.floor(o.y)+1)+')'+(o.fw?' · '+o.fw+'×'+o.fd:''));
  if(r=='field')h+=kv('الحالة',o.st==0?'💧 تحتاج سقياً':o.st==1?'🌱 تنمو '+Math.min(100,Math.round(o.t*10))+'%':'✅ جاهزة للحصاد')+kv('المنتج',RS[FO[n]][1]+' '+(RN[FO[n]]||''))+kv('الإنتاج','وحدة واحدة لكل حصاد · نمو 10ث');
  else if(r=='pen')h+=kv('الاحتياج',o.need?((o.nw?'💧 ':'')+(o.nf>0?'🌾×'+o.nf:'')||'يُجهّز…'):'لا شيء — بعد '+Math.max(0,Math.ceil(40-(o.tf||0)))+'ث')+kv('العلف لكل دورة',FEED[n]||1)+kv('المنتج',RS[PNM[n]][1]+' '+(RN[PNM[n]]||''))+kv('ناتج ينتظر الجمع',o.out||0);
- else if(r=='proc'){const rc=RC[n];h+=kv('الوصفة',Object.entries(rc.in).map(([k,v])=>v+RS[k][1]).join(' + ')+' ← '+(rc.outs||[[rc.out,1]]).map(([k,v])=>v+RS[k][1]).join(' + ')+' · 30ث')+bar(o.run?o.pg:0,30,'#f2c030');for(const k in rc.in)h+=kv('مخزون '+(RN[k]||k),(o.inv[k]||0)+' / '+icap(rc,k));h+=kv('الناتج',(o.out||0)+' / '+(rc.oc||10))}
+ else if(r=='proc'){const rc=RC[n];h+=kv('الوصفة',Object.entries(rc.in).map(([k,v])=>v+RS[k][1]).join(' + ')+' ← '+(rc.outs||[[rc.out,1]]).map(([k,v])=>v+RS[k][1]).join(' + ')+' · '+(rc.t||30)+'ث')+bar(o.run?o.pg:0,rc.t||30,'#f2c030');for(const k in rc.in)h+=kv('مخزون '+(RN[k]||k),(o.inv[k]||0)+' / '+icap(rc,k));h+=kv('الناتج',(o.out||0)+' / '+(rc.oc||10))}
  else if(r=='prod'){const p=PR[n];h+=kv('المنتج',RS[p.out][1]+' '+(RN[p.out]||''))+bar(o.pg||0,p.t||20,'#f2c030')+kv('كل',(p.t||20)+'ث')+kv('الناتج',o.out||0)}
  else if(STO[r]){const c=o.cap||CAP[r]||100,t=o.inv?tot(o):0,e=Object.entries(o.inv||{}).filter(a=>a[1]>0);h+=kv('السعة',t+' / '+c)+bar(t,c,t>=c?'#e5534b':'')+kv('يخزّن',SG[r]?SG[r].map(x=>RS[x][1]).join(' '):'كل الأصناف (مستودع عام للبيع)')+(e.length?e.map(a=>kv(RS[a[0]][1]+' '+(RN[a[0]]||a[0]),a[1])).join(''):kv('المحتوى','فارغ'))}
  else if(r=='well')h+=kv('الوظيفة','مصدر مياه للسقي');
