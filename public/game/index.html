@@ -680,8 +680,8 @@ function tick(o,dt){const r=o.role;if(!r)return;if(o.k=='veh'){(r=='truck'?aiK:a
 function plan(w){const me=w.role=='farm'?'farm':'hand',L=a=>nearest(a,w),act=(...r)=>objs.filter(o=>r.includes(o.role)&&o.act!==false&&o.inv&&dom(o)==me),stk=r=>objs.filter(q=>ACC[q.role]&&q.act!==false&&q.inv&&(q.inv[r]||0)>0);
  if(me=='farm'){const pw=L(act('pen').filter(p=>p.nw&&!CL.has('p'+oid(p)))),ws=wsrc(w);if(pw&&ws){const k='p'+oid(pw);cl(k);w.ks=[k];return[{go:once(()=>wsrc(w))},{d:1.2,st:'fill',fn:()=>{w.car='bucket'}},{go:()=>ft(pw)},{d:1.5,st:'water',fn:()=>{pw.nw=0;w.car=null;penDone(pw)}}]}
  const pf=L(act('pen').filter(p=>p.nf&&!CL.has('f'+oid(p)))),fs=['feed','corn'].find(r=>stk(r).length);if(pf&&fs){const k='f'+oid(pf),src=nearest(stk(fs),pf);cl(k);w.ks=[k];return[{go:()=>ft(src)},{d:.8,st:'take',fn:()=>{const a=Math.min(src.inv[fs]||0,pf.nf);if(a<1)return false;src.inv[fs]-=a;w.n=a;w.car='feed'}},{go:()=>ft(pf)},{d:1.5,st:'feed',fn:()=>{pf.nf=Math.max(0,pf.nf-w.n);w.car=null;penDone(pf)}}]}}
- const transfer=(kind,sourceName)=>{
-  const src=L(objs.filter(o=>o.act!==false&&o.inv&&o.out>=1&&o.ores==kind&&ITEMS[o.ci]?.[2]==sourceName&&!CL.has('c'+oid(o))));
+ const transfer=(kind,sourceRole)=>{
+  const src=L(objs.filter(o=>o.role==sourceRole&&o.act!==false&&o.inv&&o.out>=1&&o.ores==kind&&!CL.has('c'+oid(o))));
   if(!src)return null;
   const dest=L(objs.filter(p=>p.role=='proc'&&p.act!==false&&p.inv&&ITEMS[p.ci]?.[2]=='Refinery'&&!CL.has('d'+oid(p)+kind)&&RC.Refinery.in[kind]&&(p.inv[kind]||0)<icap(RC.Refinery,kind)));
   if(!dest)return null;
@@ -689,11 +689,11 @@ function plan(w){const me=w.role=='farm'?'farm':'hand',L=a=>nearest(a,w),act=(..
   cl(sk);cl(dk);w.ks=[sk,dk];
   return[{go:()=>ft(src)},{d:1.2,st:'take',fn:()=>{const room=icap(RC.Refinery,kind)-(dest.inv[kind]||0),a=Math.min(src.out,room);if(a<1)return false;src.out-=a;if(src.out<1)src.ores=null;w.n=a;w.car=kind}},{go:()=>ft(dest)},{d:.6,st:'drop',fn:()=>{give(dest,kind,w.n);w.car=null}}]
  };
- const waterTransfer=transfer('waterdrum','Water Facility');
+ const waterTransfer=transfer('waterdrum','proc');
  if(waterTransfer)return waterTransfer;
- const oilTransfer=transfer('oil','Oil Pump');
+ const oilTransfer=transfer('oil','prod');
  if(oilTransfer)return oilTransfer;
- const energyTransfer=transfer('bat','Wind Turbine');
+ const energyTransfer=transfer('bat','prod');
  if(energyTransfer)return energyTransfer;
  const co=L(act('field','pen','prod','proc').filter(o=>o.out>=1&&(o.role!='field'||o.st==2)&&!CL.has('c'+oid(o))&&dst(o.ores,o.out,w)));
  if(co){const k='c'+oid(co),f=co.role=='field';cl(k);w.ks=[k];let D;return[{go:()=>f?ct(co):ft(co)},{d:1.2,st:f?'harv':'take',fn:()=>{if(co.out<1)return false;w.n=co.out;w.car=co.ores;co.out=0;if(f){co.st=0;co.t=0}}},{go:()=>(D=D||dst(w.car,w.n,w))&&ft(D)},{d:.6,st:'drop',fn:()=>{if(D)give(D,w.car,w.n);w.car=null}}]}
