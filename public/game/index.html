@@ -693,6 +693,8 @@ function plan(w){const me=w.role=='farm'?'farm':'hand',L=a=>nearest(a,w),act=(..
  if(waterTransfer)return waterTransfer;
  const oilTransfer=transfer('oil','Oil Pump');
  if(oilTransfer)return oilTransfer;
+ const energyTransfer=transfer('bat','Wind Turbine');
+ if(energyTransfer)return energyTransfer;
  const co=L(act('field','pen','prod','proc').filter(o=>o.out>=1&&(o.role!='field'||o.st==2)&&!CL.has('c'+oid(o))&&dst(o.ores,o.out,w)));
  if(co){const k='c'+oid(co),f=co.role=='field';cl(k);w.ks=[k];let D;return[{go:()=>f?ct(co):ft(co)},{d:1.2,st:f?'harv':'take',fn:()=>{if(co.out<1)return false;w.n=co.out;w.car=co.ores;co.out=0;if(f){co.st=0;co.t=0}}},{go:()=>(D=D||dst(w.car,w.n,w))&&ft(D)},{d:.6,st:'drop',fn:()=>{if(D)give(D,w.car,w.n);w.car=null}}]}
  const C=[];act('proc').forEach(p=>{const rc=RC[ITEMS[p.ci][2]];for(const r in rc.in){const need=Math.min(10,icap(rc,r)-(p.inv[r]||0)),k='d'+oid(p)+r;if(need>0&&!CL.has(k)){const s=nearest(stk(r),p);if(s)C.push({p,r,s,need,k,x:p.x,y:p.y})}}});
