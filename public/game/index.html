@@ -462,14 +462,14 @@ function tick(o,dt){const r=o.role;if(!r)return;if(o.k=='veh'){(r=='truck'?aiK:a
  else if(r=='pen'){if(o.nw||o.nf>0)o.need=1;if(!o.need){o.tf=(o.tf==null?30:o.tf)+dt;if(o.tf>=40){o.need=1;o.nw=1;o.nf=FEED[n]||1}}}
  else if(r=='prod'){if(o.out<10){o.pg+=dt;const p=PR[n];if(o.pg>=(p.t||20)){o.pg=0;o.out++;o.ores=p.out}}}
  else if(r=='proc'){const rc=RC[n];if(!o.run){if(o.out<10&&Object.keys(rc.in).every(k=>(o.inv[k]||0)>=rc.in[k])){for(const k in rc.in)o.inv[k]-=rc.in[k];o.run=1;o.pg=0}}else{o.pg+=dt;if(o.pg>=30){o.run=0;o.out++;o.ores=rc.out}}}}
-function wsrc(w){const ws=objs.filter(o=>o.role=='well'&&o.act!==false);return nearest(ws.length?ws.map(o=>({x:o.x+.5,y:o.y+1.35})):SHORE,w)}
+function wsrc(w){const ws=objs.filter(o=>o.role=='well');return nearest(ws.length?ws.map(o=>({x:o.x+.5,y:o.y+1.35})):SHORE,w)}
 function fin(w){rls(w.ks||[]);w.ks=[];w.steps=null;w.st='idle';w.car=null}
 function aiH(w,dt){w.walk=false;if(!w.steps){w.steps=plan(w);w.tm=0;if(!w.steps){const h=fr(w.home);go(w,h.x,h.y,dt);return}}
  const s=w.steps[0];if(!s){fin(w);return}
  if(s.go){const p=s.go();if(!p){fin(w);return}if(go(w,p.x,p.y,dt)){w.steps.shift();w.tm=0}}
  else{w.st=s.st;w.tm+=dt;if(w.tm>=s.d){if(s.fn&&s.fn()===false){fin(w);return}w.steps.shift();w.tm=0;w.st='idle'}}
  if(w.steps&&!w.steps.length)fin(w)}
-function plan(w){const L=a=>nearest(a,w),act=(...r)=>objs.filter(o=>r.includes(o.role)&&o.act!==false&&o.inv),stk=r=>objs.filter(q=>ACC[q.role]&&q.role!='wh'&&q.act!==false&&q.inv&&(q.inv[r]||0)>0);
+function plan(w){const L=a=>nearest(a,w),act=(...r)=>objs.filter(o=>r.includes(o.role)&&o.act!==false&&o.inv),stk=r=>objs.filter(q=>ACC[q.role]&&q.act!==false&&q.inv&&(q.inv[r]||0)>0);
  const co=L(act('field','pen','prod','proc').filter(o=>o.out>=1&&(o.role!='field'||o.st==2)&&!CL.has('c'+oid(o))&&dst(o.ores,o.out,w)));
  if(co){const k='c'+oid(co),f=co.role=='field';cl(k);w.ks=[k];let D;return[{go:()=>f?ct(co):ft(co)},{d:1.2,st:f?'harv':'take',fn:()=>{if(co.out<1)return false;w.n=co.out;w.car=co.ores;co.out=0;if(f){co.st=0;co.t=0}}},{go:()=>(D=D||dst(w.car,w.n,w))&&ft(D)},{d:.6,st:'drop',fn:()=>{if(D)give(D,w.car,w.n);w.car=null}}]}
  const C=[];act('proc').forEach(p=>{const rc=RC[ITEMS[p.ci][2]];for(const r in rc.in){const need=Math.min(6,rc.in[r]*3-(p.inv[r]||0)),k='d'+oid(p)+r;if(need>0&&!CL.has(k)){const s=nearest(stk(r),p);if(s)C.push({p,r,s,need,k,x:p.x,y:p.y})}}});
