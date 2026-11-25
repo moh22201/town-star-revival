@@ -33,7 +33,7 @@ button:active{transform:translateY(2px);box-shadow:0 1px 0 #1a5c98}
 <div class="btns"><button id="bs" title="حفظ">💾</button><button id="br" title="بداية جديدة">🔄</button><button id="bd" title="حذف">🗑️</button><button id="bg" title="الشبكة">▦</button><button id="bz" title="تقريب">＋</button><button id="bm" title="تبعيد">－</button><button id="bc" title="توسيط">◎</button></div></div>
 <div class="hud bot" style="flex-direction:column;align-items:stretch"><div class="card" id="info">اختر منشأة من الأسفل ثم المس الأرض · المس مبنى لنقله · اسحب للتحريك</div><div class="card" id="pan"><div id="det"></div><div id="items"></div></div><div class="card" id="cat"></div></div>
 <script>
-const W=50,H=40,TW=100,TH=50,$=id=>document.getElementById(id);
+const W=50,H=40,TW=102,TH=51,$=id=>document.getElementById(id);
 const cv=$('c'),ctx=cv.getContext('2d');
 let cw,ch,dpr,cam={x:0,y:0,s:1},grid=false,sel=null;
 const P=(x,y,z=0)=>[(x-y)*TW/2,(x+y)*TH/2-z];
