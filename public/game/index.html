@@ -651,7 +651,7 @@ CAP.silo=200;CAP.wh=2000;
 RC['Windmill']={in:{wheat:10,wood:1},out:'flour',ic:{wheat:50,wood:5},oc:50};
 RC['Feed Mill']={in:{wheat:2,corn:1},out:'feed',ic:{wheat:20,corn:10},oc:20};
 RC['Steel Mill']={in:{ore:5},out:'steel',ic:{ore:100},oc:20};
-RC['Refinery']={in:{waterdrum:1,bat:3,oil:2},out:'fuel',t:10};
+RC['Refinery']={in:{waterdrum:1,bat:3,oil:2},out:'fuel',ic:{oil:80},t:10};
 RC['Lumber Mill']={in:{oakwood:5},out:'oakbarrel',ic:{oakwood:15},oc:10,t:10};
 RC['Water Facility']={in:{bat:1,oakbarrel:1},out:'waterdrum',ic:{bat:10,oakbarrel:10},oc:10,t:10};
 const icap=(rc,r)=>(rc.ic&&rc.ic[r])||rc.in[r]*3;
