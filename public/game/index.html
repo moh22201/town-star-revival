@@ -33,7 +33,7 @@ button:active{transform:translateY(2px);box-shadow:0 1px 0 #1a5c98}
 <div class="btns"><button id="bs" title="حفظ">💾</button><button id="br" title="بداية جديدة">🔄</button><button id="bd" title="حذف">🗑️</button><button id="bg" title="الشبكة">▦</button><button id="bz" title="تقريب">＋</button><button id="bm" title="تبعيد">－</button><button id="bc" title="توسيط">◎</button></div></div>
 <div class="hud bot" style="flex-direction:column;align-items:stretch"><div class="card" id="info">اختر منشأة من الأسفل ثم المس الأرض · المس مبنى لنقله · اسحب للتحريك</div><div class="card" id="pan"><div id="det"></div><div id="items"></div></div><div class="card" id="cat"></div></div>
 <script>
-const W=40,H=25,TW=102,TH=51,$=id=>document.getElementById(id);
+const W=50,H=40,TW=64,TH=32,$=id=>document.getElementById(id);
 const cv=$('c'),ctx=cv.getContext('2d');
 let cw,ch,dpr,cam={x:0,y:0,s:1},grid=false,sel=null;
 const P=(x,y,z=0)=>[(x-y)*TW/2,(x+y)*TH/2-z];
@@ -50,7 +50,7 @@ const NAMES=['متاح للبناء ✓','طريق','بركة ماء','مبنى'
 const objs=[];
 [[22,5,1.7],[33,6,2.3],[6,15,2],[32,16,1.8],[16,13,1.4]].forEach(([cx,cy,r])=>{
  for(let x=0;x<W;x++)for(let y=0;y<H;y++)if(Math.hypot(x+.5-cx,y+.5-cy)<r+(hs(x,y,3)-.5)*.9)T[x][y]=2});
-for(let x=6;x<=15;x++)T[x][5]=1;
+for(let x=6;x<=15;x++)T[x][4]=1;
 
 for(let x=0;x<W;x++)for(let y=0;y<H;y++){
  if(x>=40||y>=25||T[x][y])continue;
@@ -332,7 +332,7 @@ const up=e=>{if(ptrs.has(e.pointerId)&&ptrs.size==1&&moved<8)tap(e.clientX,e.cli
 cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
 cv.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?1.12:.89,e.clientX,e.clientY)},{passive:false});
 function pickObj(px,py){for(const z of[0,20,40,62]){const p=pick(px,py+z*cam.s);if(p&&OBJ[p.x][p.y])return OBJ[p.x][p.y]}return null}
-function fits(o,x,y){const fw=o.fw||1,fd=o.fd||1;for(let i=0;i<fw;i++)for(let j=0;j<fd;j++){const a=x+i,b=y+j;if(a<0||b<0||a>=W||b>=H)return false;if(T[a][b]!=0&&OBJ[a][b]!==o)return false}for(let i=-1;i<=fw;i++)for(let j=-1;j<=fd;j++){if(i>=0&&i<fw&&j>=0&&j<fd)continue;const a=x+i,b=y+j;if(a>=0&&b>=0&&a<W&&b<H&&T[a][b]==1)return false}return true}
+function fits(o,x,y){for(let i=0;i<(o.fw||1);i++)for(let j=0;j<(o.fd||1);j++){const a=x+i,b=y+j;if(a<0||b<0||a>=W||b>=H)return false;if(T[a][b]!=0&&OBJ[a][b]!==o)return false}return true}
 function tap(px,py){const p=pick(px,py),info=s=>$('info').textContent=s;
  if(delMode){doDel(px,py,p);return}if(placing){if(!p)return;const d=ITEMS[placing-1];if(d[2]=='Paved Road'||d[2]=='Dirt Road'||d[2]=='Grass Road'){roadAt(p.x,p.y);return}const z=SZ[d[3]]||1,o={k:'cat',ci:placing-1,role:ROLE(d),x:p.x,y:p.y,fw:z,fd:z,mv:1,st:0,t:0};if(o.role=='tractor'||o.role=='truck'){delete o.fw;delete o.fd;o.k='veh';o.x+=.5;o.y+=.5;o.hx=o.x;o.hy=o.y;o.nocc=1;o.mv=0;o.st='idle';o.fx=1}if(!fits(o,p.x,p.y))return info('المربع مشغول');objs.push(o);occ(o,1);return info('تم البناء ✓ — اضغط مربعاً آخر أو أغلق القائمة')}
  if(mov){if(p&&OBJ[p.x][p.y]===mov){mov=null;return info('أُلغي التحديد')}if(p&&fits(mov,p.x,p.y)){occ(mov,0);mov.x=p.x;mov.y=p.y;occ(mov,1);mov=null;return info('تم النقل ✓')}return info('لا يتسع هنا — اختر مكاناً فارغاً')}
@@ -426,7 +426,7 @@ for(let i=ITEMS.length-1;i>=0;i--){const d=ITEMS[i];if([9,12,14].includes(d[0])|
 ITEMS.push([10,'شاحنة البيع','Sales Truck','H','#d6552e','#f4f1ea','#222222','k','🚚'],[10,'طريق معبد','Paved Road','Q','#a8a8ae','#8a8a90','','','🛣️']);
 const ICO={};
 function icon(i){if(ICO[i])return ICO[i];const d=ITEMS[i],c=document.createElement('canvas');c.width=120;c.height=90;gx=c.getContext('2d');try{K[d[3]](d[4],d[5],d[6],d[7])}catch(e){console.error(d[2],e)}gx.beginPath();gx.arc(16,16,12,0,7);gx.fillStyle='rgba(255,255,255,.85)';gx.fill();gx.font='17px sans-serif';gx.textAlign='center';gx.textBaseline='middle';gx.fillStyle='#000';gx.fillText(d[8],16,17);return ICO[i]=c.toDataURL()}
-const HIDE=new Set(["Nuclear Power", "Lumber Yard", "Trough", "Forklift", "Trade Depot", "Trade Dock", "Boxing Facility", "Builder House", "Worker House", "Wizard's Workshop", "Fishing Spot", "Salmon Farm", "Mushroom Stand", "Twin's Garage", "Art and Deco Shop", "Jam Storage"]);
+const HIDE=new Set(["Nuclear Power", "Lumber Yard", "Trough", "Forklift", "Trade Depot", "Trade Dock", "Boxing Facility", "Builder House", "Wizard's Workshop", "Fishing Spot", "Salmon Farm", "Mushroom Stand", "Twin's Garage", "Art and Deco Shop", "Jam Storage"]);
 let cc=-1;
 $('cat').innerHTML=CATS.map((c,i)=>!ITEMS.some(d=>d[0]==i&&!HIDE.has(d[2]))?'':`<button data-c='${i}' title='${c[1]}'>${c[0]}</button>`).join('');
 function showCat(){const pn=$('pan');placing=null;[...$('cat').children].forEach((b,i)=>b.classList.toggle('on',i==cc));if(cc<0){pn.classList.remove('show');return}
@@ -435,18 +435,18 @@ function showCat(){const pn=$('pan');placing=null;[...$('cat').children].forEach
 $('cat').onclick=e=>{const b=e.target.closest('button');if(!b)return;const c=+b.dataset.c;cc=cc==c?-1:c;showCat()};
 $('items').onclick=e=>{const it=e.target.closest('.it');if(!it)return;const ii=+it.dataset.i+1;delMode=false;$('bd').classList.remove('on');placing=placing==ii?null:ii;mov=null;$('info').textContent=placing?'المس الأرض لوضع: '+ITEMS[ii-1][1]+' (بلا حدّ)':'أُلغي الوضع';[...$('items').children].forEach(x=>x.classList.toggle('on',!!placing&&x===it));const d=ITEMS[+it.dataset.i];$('det').textContent=`${d[8]} ${d[1]} — ${d[2]}`};
 /* ===== الاقتصاد وسلسلة الإنتاج ===== */
-const RS={wood:['wood','🪵'],oakwood:['wood','🌳'],oakbarrel:['goods','🪵'],plank:['goods','📏'],wheat:['crop','🌾'],corn:['crop','🌽'],cotton:['crop','☁️'],sugar:['crop','🎋'],soy:['crop','🫘'],salt:['crop','🧂'],mint:['crop','🌿'],pumpkin:['crop','🎃'],strawberry:['crop','🍓'],blueberry:['crop','🫐'],lettuce:['crop','🥬'],tomato:['crop','🍅'],vanilla:['crop','🌼'],clover:['crop','☘️'],clay:['crop','🟤'],cocoa:['crop','🍫'],apple:['crop','🍎'],bamboo:['crop','🎍'],grape:['crop','🍇'],feed:['crop','🥣'],flour:['crop','🥡'],egg:['food','🥚'],milk:['food','🥛'],honey:['food','🍯'],bread:['food','🥖'],cake:['food','🎂'],candy:['food','🍬'],choco:['food','🍫'],wine:['food','🍷'],meal:['food','☕'],jam:['food','🫙'],wool:['goods','🧶'],fabric:['goods','🧵'],pot:['goods','🏺'],ore:['goods','⛓️'],sand:['goods','🏖️'],glass:['goods','🔮'],steel:['goods','🔩'],bat:['goods','⚡'],oil:['fuel','🛢️'],fuel:['fuel','⛽'],waterdrum:['goods','🪣'],petrol:['fuel','🛢️'],gasoline:['fuel','⛽']};
-const ACC={store:['wood'],silo:['crop'],pantry:['food'],fuelst:['oil','fuel'],depot:['crop','food','goods','wood','fuel']},STO={store:1,silo:1,depot:1,pantry:1,fuelst:1},HS={whouse:1,lhouse:1,fhouse:1},NEED=['well','store','silo','depot','pantry','fuelst','proc','prod'];
-const RC={'Windmill':{in:{wheat:1},out:'flour'},'Bakery':{in:{flour:1},out:'bread'},'Cakery':{in:{flour:1,egg:1},out:'cake'},'Candy Shop':{in:{sugar:1},out:'candy'},'Chocolate Shop':{in:{cocoa:1,sugar:1},out:'choco'},'Feed Mill':{in:{corn:1},out:'feed'},'Winery':{in:{grape:2},out:'wine'},'Cafe':{in:{bread:1,milk:1},out:'meal'},'Lumber Mill':{in:{wood:2},out:'plank'},'Fabric Plant':{in:{cotton:2},out:'fabric'},'Glass Factory':{in:{sand:2,fuel:1},out:'glass'},'Steel Mill':{in:{ore:2,fuel:1},out:'steel'},'Refinery':{in:{oil:2},out:'fuel',t:10},'Pottery Shop':{in:{clay:2},out:'pot'},'Beekeeper House':{in:{honey:2},out:'jam'},'Power Plant':{in:{fuel:1},out:'bat'}};
-const PR={'Beehive':{out:'honey'},'Iron Mine':{out:'ore'},'Sand Mine':{out:'sand'},'Shallow Mine':{out:'ore'},'Oil Pump':{out:'oil'},'Wind Turbine':{out:'bat',t:5}};
+const RS={wood:['wood','🪵'],plank:['goods','📏'],wheat:['crop','🌾'],corn:['crop','🌽'],cotton:['crop','☁️'],sugar:['crop','🎋'],soy:['crop','🫘'],salt:['crop','🧂'],mint:['crop','🌿'],pumpkin:['crop','🎃'],strawberry:['crop','🍓'],blueberry:['crop','🫐'],lettuce:['crop','🥬'],tomato:['crop','🍅'],vanilla:['crop','🌼'],clover:['crop','☘️'],clay:['crop','🟤'],cocoa:['crop','🍫'],apple:['crop','🍎'],bamboo:['crop','🎍'],grape:['crop','🍇'],feed:['crop','🥣'],flour:['crop','🥡'],egg:['food','🥚'],milk:['food','🥛'],honey:['food','🍯'],bread:['food','🥖'],cake:['food','🎂'],candy:['food','🍬'],choco:['food','🍫'],wine:['food','🍷'],meal:['food','☕'],jam:['food','🫙'],wool:['goods','🧶'],fabric:['goods','🧵'],pot:['goods','🏺'],ore:['goods','⛓️'],sand:['goods','🏖️'],glass:['goods','🔮'],steel:['goods','🔩'],bat:['goods','⚡'],oil:['fuel','🛢️'],fuel:['fuel','⛽'],waterdrum:['goods','🪣'],petrol:['fuel','🛢️'],gasoline:['fuel','⛽']};
+const ACC={store:['wood'],silo:['crop'],pantry:['food'],fuelst:['fuel'],depot:['crop','food','goods','wood','fuel']},STO={store:1,silo:1,depot:1,pantry:1,fuelst:1},HS={whouse:1,lhouse:1,fhouse:1},NEED=['well','store','silo','depot','pantry','fuelst','proc','prod'];
+const RC={'Windmill':{in:{wheat:1},out:'flour'},'Bakery':{in:{flour:1},out:'bread'},'Cakery':{in:{flour:1,egg:1},out:'cake'},'Candy Shop':{in:{sugar:1},out:'candy'},'Chocolate Shop':{in:{cocoa:1,sugar:1},out:'choco'},'Feed Mill':{in:{corn:1},out:'feed'},'Winery':{in:{grape:2},out:'wine'},'Cafe':{in:{bread:1,milk:1},out:'meal'},'Lumber Mill':{in:{wood:2},out:'plank'},'Fabric Plant':{in:{cotton:2},out:'fabric'},'Glass Factory':{in:{sand:2,fuel:1},out:'glass'},'Steel Mill':{in:{ore:2,fuel:1},out:'steel'},'Refinery':{in:{oil:2},out:'fuel'},'Pottery Shop':{in:{clay:2},out:'pot'},'Beekeeper House':{in:{honey:2},out:'jam'},'Power Plant':{in:{fuel:1},out:'bat'}};
+const PR={'Beehive':{out:'honey'},'Iron Mine':{out:'ore'},'Sand Mine':{out:'sand'},'Shallow Mine':{out:'ore'},'Oil Pump':{out:'oil'},'Wind Turbine':{out:'bat',t:60}};
 const PNM={'Chicken Coop':'egg','Duck House':'egg','Sheep Pen':'wool','Milk Barn':'milk','Pasture':'wool'};
-const FO={'Cotton Field':'cotton','Sugarcane Field':'sugar','Wheat Field':'wheat','Tree Farm':'wood','Oak Tree Farm':'oakwood','Salt Field':'salt','Peppermint Field':'mint','Pumpkin Patch':'pumpkin','Strawberry Field':'strawberry','Cocoa Tree':'cocoa','Apple Tree':'apple','Blueberry Field':'blueberry','Lettuce Field':'lettuce','Corn Field':'corn','Soybean Field':'soy','Tomato Farm':'tomato','Vanilla Bean Field':'vanilla','Cabernet Vines':'grape','Chardonnay Vines':'grape','Pinot Noir Vines':'grape','Bamboo Farm':'bamboo','Wild Clover':'clover','Clay Field':'clay'};
+const FO={'Cotton Field':'cotton','Sugarcane Field':'sugar','Wheat Field':'wheat','Tree Farm':'wood','Oak Tree Farm':'wood','Salt Field':'salt','Peppermint Field':'mint','Pumpkin Patch':'pumpkin','Strawberry Field':'strawberry','Cocoa Tree':'cocoa','Apple Tree':'apple','Blueberry Field':'blueberry','Lettuce Field':'lettuce','Corn Field':'corn','Soybean Field':'soy','Tomato Farm':'tomato','Vanilla Bean Field':'vanilla','Cabernet Vines':'grape','Chardonnay Vines':'grape','Pinot Noir Vines':'grape','Bamboo Farm':'bamboo','Wild Clover':'clover','Clay Field':'clay'};
 let UID=0;const CL=new Set(),oid=o=>o.uid||(o.uid=++UID),cl=k=>{CL.add(k)},rls=ks=>ks.forEach(k=>CL.delete(k)),tot=o=>Object.values(o.inv).reduce((a,b)=>a+b,0);
-function roleOf(d){const n=d[2];if(n=='Farm Tractor')return'tractor';if(n=='Sales Truck')return'truck';const m={'Silo':'silo','Wood Shed':'store','Storehouse':'depot','Warehouse':'depot','Pantry':'pantry','Fuel Storage':'fuelst','Worker House':'whouse','Lumberjack House':'lhouse','Farm House':'fhouse','Well':'well','Water Pump':'well','Wind Pump':'well','Water Facility':'well'};if(n=='Water Facility')return'proc';if(m[n])return m[n];if(FO[n])return'field';if(PNM[n])return'pen';if(RC[n])return'proc';if(PR[n])return'prod';return null}
+function roleOf(d){const n=d[2];if(n=='Farm Tractor')return'tractor';if(n=='Sales Truck')return'truck';const m={'Silo':'silo','Wood Shed':'store','Storehouse':'depot','Warehouse':'depot','Pantry':'pantry','Fuel Storage':'fuelst','Worker House':'whouse','Lumberjack House':'lhouse','Farm House':'fhouse','Well':'well','Water Pump':'well','Wind Pump':'well','Water Facility':'well'};if(m[n])return m[n];if(FO[n])return'field';if(PNM[n])return'pen';if(RC[n])return'proc';if(PR[n])return'prod';return null}
 function give(s,r,n){if(!s||!s.inv)return;s.inv[r]=(s.inv[r]||0)+Math.max(0,Math.min(n,s.cap-tot(s)))}
 function dst(r,n,p){const g=RS[r][0];let b=null,bd=1e9;objs.forEach(o=>{if(!ACC[o.role]||o.act===false||!o.inv||!ACC[o.role].includes(g)||tot(o)+(n||1)>o.cap)return;const s=Math.hypot(o.x-p.x,o.y-p.y)+(o.role=='depot'?1000:0);if(s<bd){bd=s;b=o}});return b}
 function onRoad(o){const w=o.fw||1,h=o.fd||1;for(let i=-1;i<=w;i++)for(let j=-1;j<=h;j++){const ix=i>=0&&i<w,jx=j>=0&&j<h;if(ix&&jx)continue;if(!ix&&!jx)continue;const x=o.x+i,y=o.y+j;if(x>=0&&y>=0&&x<W&&y<H&&T[x][y]==1)return true}return false}
-function roadAt(x,y){for(let a=x-1;a<=x+1;a++)for(let b=y-1;b<=y+1;b++)if(a>=0&&b>=0&&a<W&&b<H&&OBJ[a][b]){$('info').textContent='اترك مربعاً فارغاً بين الطريق والمنشأة';return}if((T[x][y]==0&&!OBJ[x][y])||(T[x][y]==1&&RT[x][y]!=(ITEMS[placing-1][2]=='Dirt Road'?1:0))){T[x][y]=1;RT[x][y]=ITEMS[placing-1][2]=='Dirt Road'?1:0;$('info').textContent='تم بناء الطريق ✓'}}
+function roadAt(x,y){if((T[x][y]==0&&!OBJ[x][y])||(T[x][y]==1&&RT[x][y]!=(ITEMS[placing-1][2]=='Dirt Road'?1:0))){T[x][y]=1;RT[x][y]=ITEMS[placing-1][2]=='Dirt Road'?1:0;$('info').textContent='تم بناء طريق معبد ✓'}}
 const isRd=()=>placing&&ITEMS[placing-1]&&/Road/.test(ITEMS[placing-1][2]),paint=(px,py)=>{const p=pick(px,py);if(p)roadAt(p.x,p.y)};
 function descr(o){const d=ITEMS[o.ci];if(!d)return'';let s=d[1];if(NEED.includes(o.role)&&o.act===false)s+=' ⛔ لا يعمل (يحتاج طريقاً أمامه)';if(o.inv){const v=Object.entries(o.inv).filter(a=>a[1]>0).map(a=>RS[a[0]][1]+a[1]).join(' ');if(o.cap)s+=' | '+tot(o)+'/'+o.cap+' '+v;else if(v)s+=' | '+v}if(o.role=='pen'&&(o.nw||o.nf>0))s+=' | يحتاج: '+(o.nw?'💧 ':'')+(o.nf>0?'🌾×'+o.nf:'');if(o.out)s+=' | ناتج: '+RS[o.ores][1]+'×'+o.out;return s}
 K.Q=function(a){GND();FP([[60,48],[96,66],[60,84],[24,66]],a);const A=[24,66],B=[60,48],C=[96,66],D=[60,84];for(let i=1;i<4;i++){const t=i/4;LN(A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t,D[0]+(C[0]-D[0])*t,D[1]+(C[1]-D[1])*t,'#76767c',1.2);LN(A[0]+(D[0]-A[0])*t,A[1]+(D[1]-A[1])*t,B[0]+(C[0]-B[0])*t,B[1]+(C[1]-B[1])*t,'#76767c',1.2)}};
@@ -462,14 +462,14 @@ function tick(o,dt){const r=o.role;if(!r)return;if(o.k=='veh'){(r=='truck'?aiK:a
  else if(r=='pen'){if(o.nw||o.nf>0)o.need=1;if(!o.need){o.tf=(o.tf==null?30:o.tf)+dt;if(o.tf>=40){o.need=1;o.nw=1;o.nf=FEED[n]||1}}}
  else if(r=='prod'){if(o.out<10){o.pg+=dt;const p=PR[n];if(o.pg>=(p.t||20)){o.pg=0;o.out++;o.ores=p.out}}}
  else if(r=='proc'){const rc=RC[n];if(!o.run){if(o.out<10&&Object.keys(rc.in).every(k=>(o.inv[k]||0)>=rc.in[k])){for(const k in rc.in)o.inv[k]-=rc.in[k];o.run=1;o.pg=0}}else{o.pg+=dt;if(o.pg>=30){o.run=0;o.out++;o.ores=rc.out}}}}
-function wsrc(w){const shore=[];for(let x=0;x<W;x++)for(let y=0;y<H;y++)if(T[x][y]<2&&[[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>x+a>=0&&y+b>=0&&x+a<W&&y+b<H&&T[x+a][y+b]==2))shore.push({x:x+.5,y:y+.5});return nearest(shore,w)}
+function wsrc(w){const ws=objs.filter(o=>o.role=='well'&&o.act!==false);return nearest(ws.length?ws.map(o=>({x:o.x+.5,y:o.y+1.35})):SHORE,w)}
 function fin(w){rls(w.ks||[]);w.ks=[];w.steps=null;w.st='idle';w.car=null}
 function aiH(w,dt){w.walk=false;if(!w.steps){w.steps=plan(w);w.tm=0;if(!w.steps){const h=fr(w.home);go(w,h.x,h.y,dt);return}}
  const s=w.steps[0];if(!s){fin(w);return}
  if(s.go){const p=s.go();if(!p){fin(w);return}if(go(w,p.x,p.y,dt)){w.steps.shift();w.tm=0}}
  else{w.st=s.st;w.tm+=dt;if(w.tm>=s.d){if(s.fn&&s.fn()===false){fin(w);return}w.steps.shift();w.tm=0;w.st='idle'}}
  if(w.steps&&!w.steps.length)fin(w)}
-function plan(w){const L=a=>nearest(a,w),act=(...r)=>objs.filter(o=>r.includes(o.role)&&o.act!==false&&o.inv),stk=r=>objs.filter(q=>ACC[q.role]&&q.act!==false&&q.inv&&(q.inv[r]||0)>0);
+function plan(w){const L=a=>nearest(a,w),act=(...r)=>objs.filter(o=>r.includes(o.role)&&o.act!==false&&o.inv),stk=r=>objs.filter(q=>ACC[q.role]&&q.role!='wh'&&q.act!==false&&q.inv&&(q.inv[r]||0)>0);
  const co=L(act('field','pen','prod','proc').filter(o=>o.out>=1&&(o.role!='field'||o.st==2)&&!CL.has('c'+oid(o))&&dst(o.ores,o.out,w)));
  if(co){const k='c'+oid(co),f=co.role=='field';cl(k);w.ks=[k];let D;return[{go:()=>f?ct(co):ft(co)},{d:1.2,st:f?'harv':'take',fn:()=>{if(co.out<1)return false;w.n=co.out;w.car=co.ores;co.out=0;if(f){co.st=0;co.t=0}}},{go:()=>(D=D||dst(w.car,w.n,w))&&ft(D)},{d:.6,st:'drop',fn:()=>{if(D)give(D,w.car,w.n);w.car=null}}]}
  const C=[];act('proc').forEach(p=>{const rc=RC[ITEMS[p.ci][2]];for(const r in rc.in){const need=Math.min(6,rc.in[r]*3-(p.inv[r]||0)),k='d'+oid(p)+r;if(need>0&&!CL.has(k)){const s=nearest(stk(r),p);if(s)C.push({p,r,s,need,k,x:p.x,y:p.y})}}});
@@ -549,16 +549,14 @@ function save(manual){if(noSave)return;try{const pl=objs.filter(o=>o.k=='cat'||o
  objs.forEach(o=>{if(o.k=='tree')s.tr.push([+o.x.toFixed(2),+o.y.toFixed(2),+o.s.toFixed(2),o.pine?1:0,+o.v.toFixed(2)])});
  localStorage.setItem(SK,JSON.stringify(s));if(manual)$('info').textContent='💾 تم حفظ التقدم'}catch(e){if(manual)$('info').textContent='تعذّر الحفظ في هذا المتصفح'}}
 function load(){let s=null;try{s=JSON.parse(localStorage.getItem(SK))}catch(e){}if(!s||s.v!=1)return;
- const ow=Number(s.W)||W,oh=Number(s.H)||H;window.LF=ow==W&&oh==H;
- // ترحيل الحفظ القديم إلى حدود الخريطة الحالية دون الوصول إلى خلايا خارج المصفوفة.
- for(let x=0;x<W;x++)for(let y=0;y<H;y++)if(T[x][y]==1||T[x][y]==4)T[x][y]=0;
- (Array.isArray(s.rd)?s.rd:[]).forEach(([x,y,t])=>{if(Number.isInteger(x)&&Number.isInteger(y)&&x>=0&&y>=0&&x<W&&y<H){T[x][y]=1;RT[x][y]=t}});
- for(let i=objs.length-1;i>=0;i--){const k=objs[i].k;if(k=='tree'||k=='worker'||k=='cat'||k=='veh')objs.splice(i,1)}
- (Array.isArray(s.tr)?s.tr:[]).forEach(([x,y,sc,p,v])=>{const tx=Math.floor(x),ty=Math.floor(y);if(Number.isFinite(x)&&Number.isFinite(y)&&tx>=0&&ty>=0&&tx<W&&ty<H){objs.push({k:'tree',x,y,s:sc,pine:!!p,v});T[tx][ty]=4}});
- const pl=(Array.isArray(s.pl)?s.pl:[]).map(r=>{if(!r||r.nm=='Worker House')return null;const ci=ITEMS.findIndex(d=>d[2]==r.nm);if(ci<0)return null;const x=Number(r.x),y=Number(r.y),fw=Math.max(1,Number(r.fw)||1),fd=Math.max(1,Number(r.fd)||1);if(!Number.isFinite(x)||!Number.isFinite(y)||x<0||y<0||x+fw>W||y+fd>H)return null;const o=Object.assign({},r,{ci});delete o.nm;o.role=roleOf(ITEMS[ci]);if(o.k=='veh'){o.st='idle';o.away=0;o.car=0;o.tm=0;if(o.cargo){money+=o.cargo*10;o.cargo=0}}objs.push(o);if(o.k=='cat')occ(o,1);return o});
- if(Number.isFinite(Number(s.m)))money=Number(s.m);window.RM=new Set(Array.isArray(s.rr)?s.rr:[]);
- (Array.isArray(s.wk)?s.wk:[]).forEach(r=>{if(!r||!Number.isFinite(Number(r.x))||!Number.isFinite(Number(r.y))||r.x<0||r.y<0||r.x>=W||r.y>=H)return;const home=pl[r.hi]||(r.hm?{x:r.hm[0],y:r.hm[1],fw:r.hm[2],fd:r.hm[3]}:null);if(r.role=='hand'||(home&&home.role=='whouse'))return;objs.push({k:'worker',role:(home&&home.role=='fhouse'?'farm':r.role),home,x:r.x,y:r.y,st:'idle',tm:0,car:null,fx:1,mvg:0,walk:false})});
- $('info').textContent='✅ تم استرجاع التقدم المحفوظ ضمن حدود الأرض الحالية'}
+ const ow=s.W||40,oh=s.H||25;window.LF=ow==W&&oh==H;for(let x=0;x<ow;x++)for(let y=0;y<oh;y++){if(T[x][y]==1||T[x][y]==4)T[x][y]=0}
+ s.rd.forEach(([x,y,t])=>{T[x][y]=1;RT[x][y]=t});
+ for(let i=objs.length-1;i>=0;i--){const k=objs[i].k;if((k=='tree'&&objs[i].x<ow&&objs[i].y<oh)||k=='worker'||k=='cat'||k=='veh')objs.splice(i,1)}
+ s.tr.forEach(([x,y,sc,p,v])=>{objs.push({k:'tree',x,y,s:sc,pine:!!p,v});T[Math.floor(x)][Math.floor(y)]=4});
+ const pl=s.pl.map(r=>{const ci=ITEMS.findIndex(d=>d[2]==r.nm);if(ci<0)return null;const o=Object.assign({},r,{ci});delete o.nm;o.role=roleOf(ITEMS[ci]);if(o.k=='veh'){o.st='idle';o.away=0;o.car=0;o.tm=0;if(o.cargo){money+=o.cargo*10;o.cargo=0}}objs.push(o);if(o.k=='cat')occ(o,1);return o});
+ money=s.m;window.RM=new Set(s.rr||[]);
+ s.wk.forEach(r=>{const home=pl[r.hi]||(r.hm?{x:r.hm[0],y:r.hm[1],fw:r.hm[2],fd:r.hm[3]}:null);objs.push({k:'worker',role:(home&&home.role=='fhouse'?'farm':home&&home.role=='whouse'?'hand':r.role),home,x:r.x,y:r.y,st:'idle',tm:0,car:null,fx:1,mvg:0,walk:false})});
+ $('info').textContent='✅ تم استرجاع التقدم المحفوظ'}
 let rq=0;$('bs').onclick=()=>save(true);
 $('br').onclick=()=>{if(Date.now()<rq){noSave=true;try{localStorage.removeItem(SK)}catch(e){}location.reload();return}rq=Date.now()+4000;$('info').textContent='⚠️ اضغط 🔄 مرة ثانية خلال 4 ثوانٍ لمسح التقدم والبدء من جديد'};
 load();setInterval(()=>save(),5000);addEventListener('pagehide',()=>save());document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
@@ -603,7 +601,7 @@ const cd1=DRAW.cat;DRAW.cat=(o,t)=>{cd1(o,t);if(o.role=='pen'&&o.nf>0){const z=o
 /* ===== أولويات التخزين ===== */
 ACC.wh=['crop','food','goods','wood','fuel'];STO.wh=1;NEED.push('wh');
 const RK={silo:0,store:0,pantry:0,fuelst:0,depot:1,wh:2};
-function roleOf(d){const n=d[2];if(n=='Farm Tractor')return'tractor';if(n=='Sales Truck')return'truck';const m={'Silo':'silo','Wood Shed':'store','Storehouse':'depot','Warehouse':'wh','Pantry':'pantry','Fuel Storage':'fuelst','Worker House':'whouse','Lumberjack House':'lhouse','Farm House':'fhouse','Well':'well','Water Pump':'well','Wind Pump':'well','Water Facility':'well'};if(n=='Water Facility')return'proc';if(m[n])return m[n];if(FO[n])return'field';if(PNM[n])return'pen';if(RC[n])return'proc';if(PR[n])return'prod';return null}
+function roleOf(d){const n=d[2];if(n=='Farm Tractor')return'tractor';if(n=='Sales Truck')return'truck';const m={'Silo':'silo','Wood Shed':'store','Storehouse':'depot','Warehouse':'wh','Pantry':'pantry','Fuel Storage':'fuelst','Worker House':'whouse','Lumberjack House':'lhouse','Farm House':'fhouse','Well':'well','Water Pump':'well','Wind Pump':'well','Water Facility':'well'};if(m[n])return m[n];if(FO[n])return'field';if(PNM[n])return'pen';if(RC[n])return'proc';if(PR[n])return'prod';return null}
 function give(s,r,n){if(!s||!s.inv)return;const sp=s.cap?s.cap-tot(s):10-(s.inv[r]||0);s.inv[r]=(s.inv[r]||0)+Math.max(0,Math.min(n,sp))}
 function dst(r,n,p){const g=RS[r][0];let b=null,bd=1e9;n=n||1;
  objs.forEach(o=>{if(o.role!='proc'||o.act===false||!o.inv)return;const rc=RC[ITEMS[o.ci][2]];if(!rc.in[r]||(o.inv[r]||0)+n>10)return;const s=Math.hypot(o.x-p.x,o.y-p.y);if(s<bd){bd=s;b=o}});
@@ -627,7 +625,7 @@ genNew();
 RC['Windmill']={in:{wheat:10},out:'flour',outs:[['flour',1],['feed',2]]};
 const FOV=new Set(Object.values(FO)),CAP={silo:100,store:100,depot:100,pantry:100,fuelst:100,wh:100};
 const RAWC=['wheat','corn','cotton','sugar','soy','salt','mint','pumpkin','strawberry','blueberry','lettuce','tomato','vanilla','clover','cocoa','apple','bamboo','grape','feed'];
-const SG={silo:RAWC,store:['wood','oakwood'],depot:['flour','plank','oakbarrel','waterdrum','wool','fabric','pot','ore','sand','glass','steel','bat','clay'],pantry:['flour','egg','milk','honey','bread','cake','candy','choco','wine','meal','jam'],fuelst:['oil','fuel']};
+const SG={silo:RAWC,store:['wood'],depot:['flour','plank','wool','fabric','pot','ore','sand','glass','steel','bat','clay'],pantry:['flour','egg','milk','honey','bread','cake','candy','choco','wine','meal','jam'],fuelst:['oil','fuel']};
 function dst(r,n,p){let b=null,bd=1e9;n=n||1;
  if(FOV.has(r))objs.forEach(o=>{if(o.role!='proc'||o.act===false||!o.inv)return;const rc=RC[ITEMS[o.ci][2]];if(!rc.in[r]||(o.inv[r]||0)+n>10)return;const s=Math.hypot(o.x-p.x,o.y-p.y);if(s<bd){bd=s;b=o}});
  if(b)return b;bd=1e9;
@@ -643,7 +641,7 @@ function tick(o,dt){const r=o.role;if(!r)return;if(o.k=='veh'){(r=='truck'?aiK:a
  else if(r=='pen'){if(o.nw||o.nf>0)o.need=1;if(!o.need){o.tf=(o.tf==null?30:o.tf)+dt;if(o.tf>=40){o.need=1;o.nw=1;o.nf=FEED[n]||1}}}
  else if(r=='prod'){if(o.out<10){o.pg+=dt;const p=PR[n];if(o.pg>=(p.t||20)){o.pg=0;o.out++;o.ores=p.out}}}
  else if(r=='proc'){const rc=RC[n];if(!o.run){if(o.out<10&&(o.oq||[]).length<4&&Object.keys(rc.in).every(k=>(o.inv[k]||0)>=rc.in[k])){for(const k in rc.in)o.inv[k]-=rc.in[k];o.run=1;o.pg=0}}else{o.pg+=dt;if(o.pg>=30){o.run=0;(rc.outs||[[rc.out,1]]).forEach(([rr,nn])=>{if(o.out>=1&&o.ores==rr)o.out+=nn;else if(!(o.out>=1)){o.out=nn;o.ores=rr}else(o.oq=o.oq||[]).push({r:rr,n:nn})})}}}}
-function descr(o){const d=ITEMS[o.ci];if(!d)return'';let s=d[1];if(NEED.includes(o.role)&&o.act===false)s+=' ⛔ لا يعمل ('+(d[2]=='Water Facility'?'يحتاج طريقاً ومضخة مياه ملاصقة للماء':'يحتاج طريقاً أمامه')+')';
+function descr(o){const d=ITEMS[o.ci];if(!d)return'';let s=d[1];if(NEED.includes(o.role)&&o.act===false)s+=' ⛔ لا يعمل (يحتاج طريقاً أمامه)';
  if(o.inv){const v=Object.entries(o.inv).filter(a=>a[1]>0).map(a=>RS[a[0]][1]+a[1]).join(' ');if(o.cap)s+=' | '+tot(o)+'/'+o.cap+' '+v;else if(v)s+=' | '+v}
  if(SG[o.role])s+=' | يخزّن: '+SG[o.role].map(r=>RS[r][1]).join('');else if(o.role=='wh')s+=' | مستودع البيع (يبيع منه الشاحنة فقط)';
  if(o.role=='pen'&&(o.nw||o.nf>0))s+=' | يحتاج: '+(o.nw?'💧 ':'')+(o.nf>0?'🌾×'+o.nf:'');
@@ -653,41 +651,28 @@ CAP.silo=200;CAP.wh=2000;
 RC['Windmill']={in:{wheat:10,wood:1},out:'flour',ic:{wheat:50,wood:5},oc:50};
 RC['Feed Mill']={in:{wheat:2,corn:1},out:'feed',ic:{wheat:20,corn:10},oc:20};
 RC['Steel Mill']={in:{ore:5},out:'steel',ic:{ore:100},oc:20};
-RC['Refinery']={in:{waterdrum:1,bat:3,oil:2},out:'fuel',ic:{oil:80},t:10};
-RC['Bakery']={in:{flour:10},out:'bread',outs:[['bread',2]],ic:{flour:10},t:60};
-RC['Lumber Mill']={in:{oakwood:5},out:'oakbarrel',ic:{oakwood:15},oc:10,t:10};
-RC['Water Facility']={in:{bat:1,oakbarrel:1},out:'waterdrum',ic:{bat:10,oakbarrel:10},oc:10,t:10};
+RC['Refinery']={in:{oil:1},out:'fuel',outs:[['fuel',2]],ic:{oil:100},oc:100};
 const icap=(rc,r)=>(rc.ic&&rc.ic[r])||rc.in[r]*3;
 const FARMN=new Set(['Windmill','Feed Mill','Bakery','Cakery','Candy Shop','Chocolate Shop','Winery','Cafe','Beekeeper House','Beehive']);
 const dom=o=>(o.role=='field'||o.role=='pen'||FARMN.has(ITEMS[o.ci][2]))?'farm':'hand';
-const DIRECT=new Set([...FOV,'ore','oil','oakbarrel','bat','waterdrum']),PREF={flour:['wh'],egg:['wh'],milk:['wh'],wool:['wh'],bat:['wh'],steel:['wh'],honey:['wh'],feed:['silo'],fuel:['fuelst'],wood:['store'],oakwood:['store']};
+const DIRECT=new Set([...FOV,'ore','oil']),PREF={flour:['wh'],egg:['wh'],milk:['wh'],wool:['wh'],bat:['wh'],steel:['wh'],honey:['wh'],feed:['silo'],fuel:['fuelst'],wood:['store']};
 function give(s,r,n){if(!s||!s.inv)return;const sp=s.cap?s.cap-tot(s):icap(RC[ITEMS[s.ci][2]],r)-(s.inv[r]||0);s.inv[r]=(s.inv[r]||0)+Math.max(0,Math.min(n,sp))}
 function dst(r,n,p){let b=null,bd=1e9;n=n||1;
  if(DIRECT.has(r))objs.forEach(o=>{if(o.role!='proc'||o.act===false||!o.inv)return;const rc=RC[ITEMS[o.ci][2]];if(!rc.in[r]||(o.inv[r]||0)+n>icap(rc,r))return;const s=Math.hypot(o.x-p.x,o.y-p.y);if(s<bd){bd=s;b=o}});
  if(b)return b;
- if(r==='oil'||r==='waterdrum')return null;
  for(const pr of(PREF[r]||[])){bd=1e9;objs.forEach(o=>{if(o.role!=pr||o.act===false||!o.inv||tot(o)+n>o.cap||ECX(o,r,n))return;const s=Math.hypot(o.x-p.x,o.y-p.y);if(s<bd){bd=s;b=o}});if(b)return b}
  bd=1e9;objs.forEach(o=>{const t=SG[o.role];if(!t||o.act===false||!o.inv||!t.includes(r)||tot(o)+n>o.cap||ECX(o,r,n))return;const s=Math.hypot(o.x-p.x,o.y-p.y)+(RK[o.role]||0)*1000;if(s<bd){bd=s;b=o}});return b}
 function spawnFor(o){const r={whouse:'hand',lhouse:'wood',fhouse:'farm'}[o.role];if(!r)return;const d=fr(o);objs.push({k:'worker',role:r,home:o,x:d.x,y:d.y,st:'idle',tm:0,car:null,fx:1,mvg:0,walk:false})}
-function waterEdge(o){const w=o.fw||1,h=o.fd||1;for(let i=-1;i<=w;i++)for(let j=-1;j<=h;j++){const ix=i>=0&&i<w,jx=j>=0&&j<h;if(ix&&jx)continue;if(!ix&&!jx)continue;const x=o.x+i,y=o.y+j;if(x>=0&&y>=0&&x<W&&y<H&&T[x][y]==2)return true}return false}
-function waterPumpConnected(o){const w=o.fw||1,h=o.fd||1;return objs.some(p=>{if(p===o||!p.mv||p.role!='well'||ITEMS[p.ci]?.[2]!='Water Pump'||!waterEdge(p)||!onRoad(p))return false;const pw=p.fw||1,ph=p.fd||1,gx=Math.max(0,p.x-(o.x+w),o.x-(p.x+pw)),gy=Math.max(0,p.y-(o.y+h),o.y-(p.y+ph));return gx+gy===0})}
 function tick(o,dt){const r=o.role;if(!r)return;if(o.k=='veh'){(r=='truck'?aiK:aiT)(o,dt);return}if(!o.mv)return;
  if(o.inv==null){o.inv={};o.out=0;o.pg=0}
  if(STO[r])o.cap=CAP[r]||100;
- const n=ITEMS[o.ci][2];o.act=NEED.includes(r)?(onRoad(o)&&(n!='Water Facility'||waterPumpConnected(o))):true;if(!o.act)return;
+ o.act=NEED.includes(r)?onRoad(o):true;if(!o.act)return;const n=ITEMS[o.ci][2];
  if(!(o.out>=1)&&o.oq&&o.oq.length){const q=o.oq.shift();o.out=q.n;o.ores=q.r}
  if(r=='field'){if(o.st==1){o.t+=dt;if(o.t>=10){o.st=2;o.out=1;o.ores=FO[n]}}}
  else if(r=='pen'){if(o.nw||o.nf>0)o.need=1;if(!o.need){o.tf=(o.tf==null?30:o.tf)+dt;if(o.tf>=40){o.need=1;o.nw=1;o.nf=FEED[n]||1}}}
  else if(r=='prod'){if(o.out<10){o.pg+=dt;const p=PR[n];if(o.pg>=(p.t||20)){o.pg=0;o.out++;o.ores=p.out}}}
  else if(r=='proc'){const rc=RC[n],oc=rc.oc||10;if(!o.run){if(o.out<oc&&(o.oq||[]).length<4&&Object.keys(rc.in).every(k=>(o.inv[k]||0)>=rc.in[k])){for(const k in rc.in)o.inv[k]-=rc.in[k];o.run=1;o.pg=0}}else{o.pg+=dt;if(o.pg>=(rc.t||30)){o.run=0;(rc.outs||[[rc.out,1]]).forEach(([rr,nn])=>{if(o.out>=1&&o.ores==rr)o.out+=nn;else if(!(o.out>=1)){o.out=nn;o.ores=rr}else(o.oq=o.oq||[]).push({r:rr,n:nn})})}}}}
 function plan(w){const me=w.role=='farm'?'farm':'hand',L=a=>nearest(a,w),act=(...r)=>objs.filter(o=>r.includes(o.role)&&o.act!==false&&o.inv&&dom(o)==me),stk=r=>objs.filter(q=>ACC[q.role]&&q.act!==false&&q.inv&&(q.inv[r]||0)>0);
- if(me=='farm'){const pw=L(act('pen').filter(p=>p.nw&&!CL.has('p'+oid(p)))),ws=wsrc(w);if(pw&&ws){const k='p'+oid(pw);cl(k);w.ks=[k];return[{go:once(()=>wsrc(w))},{d:1.2,st:'fill',fn:()=>{w.car='bucket'}},{go:()=>ft(pw)},{d:1.5,st:'water',fn:()=>{pw.nw=0;w.car=null;penDone(pw)}}]}
- const pf=L(act('pen').filter(p=>p.nf&&!CL.has('f'+oid(p)))),fs=['feed','corn'].find(r=>stk(r).length);if(pf&&fs){const k='f'+oid(pf),src=nearest(stk(fs),pf);cl(k);w.ks=[k];return[{go:()=>ft(src)},{d:.8,st:'take',fn:()=>{const a=Math.min(src.inv[fs]||0,pf.nf);if(a<1)return false;src.inv[fs]-=a;w.n=a;w.car='feed'}},{go:()=>ft(pf)},{d:1.5,st:'feed',fn:()=>{pf.nf=Math.max(0,pf.nf-w.n);w.car=null;penDone(pf)}}]}}
- const riderTransfer=(kind,sourceRole,destName)=>{const src=L(objs.filter(o=>o.role==sourceRole&&o.act!==false&&o.out>=1&&o.ores==kind&&!CL.has('c'+oid(o))));if(!src)return null;const dest=L(objs.filter(p=>p.act!==false&&p.inv&&ITEMS[p.ci]?.[2]==destName&&(destName=='Refinery'?p.role=='proc'&&RC.Refinery.in[kind]&&(p.inv[kind]||0)<icap(RC.Refinery,kind):p.role=='fuelst'&&tot(p)<p.cap)&&!CL.has('d'+oid(p)+kind)));if(!dest)return null;const sk='c'+oid(src),dk='d'+oid(dest)+kind;cl(sk);cl(dk);w.ks=[sk,dk];return[{go:()=>ft(src)},{d:1.2,st:'take',fn:()=>{const room=destName=='Refinery'?icap(RC.Refinery,kind)-(dest.inv[kind]||0):dest.cap-tot(dest),a=Math.min(src.out,room);if(a<1)return false;src.out-=a;if(src.out<1)src.ores=null;w.n=a;w.car=kind}},{go:()=>ft(dest)},{d:.6,st:'drop',fn:()=>{give(dest,kind,w.n);w.car=null}}]};
-  if(w.riderTask){const task=riderTransfer('oil','prod','Refinery')||riderTransfer('waterdrum','proc','Refinery')||riderTransfer('fuel','proc','Fuel Storage');if(task)return task}
-  const transfer=(kind,sourceRole)=>{const src=L(objs.filter(o=>o.role==sourceRole&&o.act!==false&&o.inv&&o.out>=1&&o.ores==kind&&!CL.has('c'+oid(o))));if(!src)return null;const dest=L(objs.filter(p=>p.role=='proc'&&p.act!==false&&p.inv&&ITEMS[p.ci]?.[2]=='Refinery'&&!CL.has('d'+oid(p)+kind)&&RC.Refinery.in[kind]&&(p.inv[kind]||0)<icap(RC.Refinery,kind)));if(!dest)return null;const sk='c'+oid(src),dk='d'+oid(dest)+kind;cl(sk);cl(dk);w.ks=[sk,dk];return[{go:()=>ft(src)},{d:1.2,st:'take',fn:()=>{const room=icap(RC.Refinery,kind)-(dest.inv[kind]||0),a=Math.min(src.out,room);if(a<1)return false;src.out-=a;if(src.out<1)src.ores=null;w.n=a;w.car=kind}},{go:()=>ft(dest)},{d:.6,st:'drop',fn:()=>{give(dest,kind,w.n);w.car=null}}]};
-  const energyTransfer=transfer('bat','prod');
- if(energyTransfer)return energyTransfer;
  const co=L(act('field','pen','prod','proc').filter(o=>o.out>=1&&(o.role!='field'||o.st==2)&&!CL.has('c'+oid(o))&&dst(o.ores,o.out,w)));
  if(co){const k='c'+oid(co),f=co.role=='field';cl(k);w.ks=[k];let D;return[{go:()=>f?ct(co):ft(co)},{d:1.2,st:f?'harv':'take',fn:()=>{if(co.out<1)return false;w.n=co.out;w.car=co.ores;co.out=0;if(f){co.st=0;co.t=0}}},{go:()=>(D=D||dst(w.car,w.n,w))&&ft(D)},{d:.6,st:'drop',fn:()=>{if(D)give(D,w.car,w.n);w.car=null}}]}
  const C=[];act('proc').forEach(p=>{const rc=RC[ITEMS[p.ci][2]];for(const r in rc.in){const need=Math.min(10,icap(rc,r)-(p.inv[r]||0)),k='d'+oid(p)+r;if(need>0&&!CL.has(k)){const s=nearest(stk(r),p);if(s)C.push({p,r,s,need,k,x:p.x,y:p.y})}}});
@@ -697,14 +682,18 @@ function plan(w){const me=w.role=='farm'?'farm':'hand',L=a=>nearest(a,w),act=(..
  const fu=L(objs.filter(s=>dm[s.role]==me&&s.act!==false&&s.inv&&tot(s)>=s.cap&&!CL.has('t'+oid(s))&&hasWh()));
  if(fu){let br=null;for(const k in fu.inv)if(fu.inv[k]>0&&(!br||fu.inv[k]>fu.inv[br]))br=k;const wh=nearest(objs.filter(h=>h.role=='wh'&&h.act!==false&&h.inv&&tot(h)<h.cap),fu);if(br&&wh){const k='t'+oid(fu);cl(k);w.ks=[k];return[{go:()=>ft(fu)},{d:1,st:'take',fn:()=>{const a=Math.min(10,fu.inv[br]||0,wh.cap-tot(wh));if(a<1)return false;fu.inv[br]-=a;w.n=a;w.car=br}},{go:()=>ft(wh)},{d:.8,st:'drop',fn:()=>{give(wh,w.car,w.n);w.car=null}}]}}
  if(me!='farm')return null;
- const ws=wsrc(w),fl=L(act('field').filter(f=>f.st==0&&!CL.has('w'+oid(f))));
+ const pf=L(act('pen').filter(p=>p.nf&&!CL.has('f'+oid(p)))),fs=['feed','corn'].find(r=>stk(r).length);
+ if(pf&&fs){const k='f'+oid(pf),s=nearest(stk(fs),w);cl(k);w.ks=[k];return[{go:()=>ft(s)},{d:.8,st:'take',fn:()=>{const a=Math.min(s.inv[fs]||0,pf.nf);if(a<1)return false;s.inv[fs]-=a;w.n=a;w.car='feed'}},{go:()=>ft(pf)},{d:1.5,st:'feed',fn:()=>{pf.nf=Math.max(0,pf.nf-w.n);w.car=null;penDone(pf)}}]}
+ const ws=wsrc(w),pw=L(act('pen').filter(p=>p.nw&&!CL.has('p'+oid(p))));
+ if(pw&&ws){const k='p'+oid(pw);cl(k);w.ks=[k];return[{go:once(()=>wsrc(w))},{d:1.2,st:'fill',fn:()=>{w.car='bucket'}},{go:()=>ft(pw)},{d:1.5,st:'water',fn:()=>{pw.nw=0;w.car=null;penDone(pw)}}]}
+ const fl=L(act('field').filter(f=>f.st==0&&!CL.has('w'+oid(f))));
  if(fl&&ws){const k='w'+oid(fl);cl(k);w.ks=[k];return[{go:once(()=>wsrc(w))},{d:1.2,st:'fill',fn:()=>{w.car='bucket'}},{go:()=>ct(fl)},{d:1.5,st:'water',fn:()=>{if(fl.st!=0)return false;fl.st=1;fl.t=0;w.car=null}}]}
  return null}
 /* ===== الواجهة الاحترافية والمحفظة وأوامر البيع ===== */
 const RM=window.RM||(window.RM=new Set());
 function applyRM(){for(let i=objs.length-1;i>=0;i--){const o=objs[i];if(o.k=='rock'&&RM.has(Math.floor(o.x)+','+Math.floor(o.y))){T[Math.floor(o.x)][Math.floor(o.y)]=0;objs.splice(i,1)}}}
 const DELP={0:20,1:40,2:60,3:100,4:40,5:60,6:100,7:150,8:150,10:80,11:50},delP=o=>DELP[ITEMS[o.ci][0]]||50;
-const RN={wood:'خشب',oakwood:'خشب بلوط',oakbarrel:'برميل بلوط',plank:'ألواح',wheat:'قمح',corn:'ذرة',cotton:'قطن',sugar:'قصب سكر',soy:'فول صويا',salt:'ملح',mint:'نعناع',pumpkin:'قرع',strawberry:'فراولة',blueberry:'توت أزرق',lettuce:'خس',tomato:'طماطم',vanilla:'فانيليا',clover:'برسيم',clay:'طين',cocoa:'كاكاو',apple:'تفاح',bamboo:'خيزران',grape:'عنب',feed:'علف',flour:'دقيق',egg:'بيض',milk:'حليب',honey:'عسل',bread:'خبز',cake:'كعك',candy:'حلوى',choco:'شوكولاتة',wine:'نبيذ',meal:'وجبة',jam:'مربى',wool:'صوف',fabric:'قماش',pot:'فخار',ore:'خام حديد',sand:'رمل',glass:'زجاج',steel:'سبائك حديد',bat:'طاقة',oil:'نفط',fuel:'وقود',waterdrum:'برميل ماء',petrol:'بترول',gasoline:'بنزين'};
+const RN={wood:'خشب',plank:'ألواح',wheat:'قمح',corn:'ذرة',cotton:'قطن',sugar:'قصب سكر',soy:'فول صويا',salt:'ملح',mint:'نعناع',pumpkin:'قرع',strawberry:'فراولة',blueberry:'توت أزرق',lettuce:'خس',tomato:'طماطم',vanilla:'فانيليا',clover:'برسيم',clay:'طين',cocoa:'كاكاو',apple:'تفاح',bamboo:'خيزران',grape:'عنب',feed:'علف',flour:'دقيق',egg:'بيض',milk:'حليب',honey:'عسل',bread:'خبز',cake:'كعك',candy:'حلوى',choco:'شوكولاتة',wine:'نبيذ',meal:'وجبة',jam:'مربى',wool:'صوف',fabric:'قماش',pot:'فخار',ore:'خام حديد',sand:'رمل',glass:'زجاج',steel:'سبائك حديد',bat:'طاقة',oil:'نفط',fuel:'وقود',waterdrum:'برميل ماء',petrol:'بترول',gasoline:'بنزين'};
 const UP={name:'اللاعب',av:'',tx:[],sold:0};
 try{Object.assign(UP,JSON.parse(localStorage.getItem('village_profile_v1')||'{}'))}catch(e){}
 const saveUP=()=>{try{localStorage.setItem('village_profile_v1',JSON.stringify(UP))}catch(e){}};
@@ -754,7 +743,7 @@ function showSheet(k){shKind=k;[...document.querySelectorAll('#dock button')].fo
 function render(){const m={build:['الإنشاءات والمنشآت',rBuild],fact:['المصانع',rFact],truck:['🚚 أمر البيع',rTruck],wallet:['👛 محفظة إبداع',rWallet],prof:['الملف الشخصي',rProf],det:['التفاصيل',()=>rDet(detObj)]}[shKind];$('st').textContent=m[0];$('sb').innerHTML=m[1]()}
 function selectItem(i){delMode=false;$('bd').classList.remove('on');placing=i+1;mov=null;closeSheet();toast('المس الأرض لوضع: '+ITEMS[i][1])}
 function rBuild(){const cs=CATS.map((c,i)=>ITEMS.some(d=>d[0]==i&&!HIDE.has(d[2]))?`<button class='${i==bcat?'on':''}' data-a='cat' data-i='${i}'>${c[0]} ${c[1]}</button>`:'').join('');const its=ITEMS.map((d,i)=>[d,i]).filter(([d])=>d[0]==bcat&&!HIDE.has(d[2])).map(([d,i])=>`<div class='row' style='flex-direction:column;margin:0;text-align:center;font-size:12px;cursor:pointer' data-a='pick' data-i='${i}'><img src='${icon(i)}' style='width:100%'><div>${d[1]}</div></div>`).join('');return `<div class='cats'>${cs}</div><div class='g'>${its}</div>`}
-function rFact(){return Object.keys(RC).map(n=>{const i=ITEMS.findIndex(d=>d[2]==n);if(i<0)return'';const rc=RC[n],d=ITEMS[i],ins=Object.entries(rc.in).map(([k,v])=>v+RS[k][1]).join(' + '),outs=(rc.outs||[[rc.out,1]]).map(([k,v])=>v+RS[k][1]).join(' + '),pl=objs.filter(o=>o.k=='cat'&&o.ci==i),run=pl.filter(o=>o.run).length;return `<div class='row'><img src='${icon(i)}' style='width:64px'><div style='flex:1'><b>${d[1]}</b><div style='font-size:12px'>${ins} ← ${outs} · ${rc.t||30}ث</div><div style='font-size:11px;opacity:.75'>سعة الناتج ${rc.oc||10} · مبنية: ${pl.length} · تعمل: ${run}</div></div><button class='btn' data-a='pick' data-i='${i}'>بناء</button></div>`}).join('')}
+function rFact(){return Object.keys(RC).map(n=>{const i=ITEMS.findIndex(d=>d[2]==n);if(i<0)return'';const rc=RC[n],d=ITEMS[i],ins=Object.entries(rc.in).map(([k,v])=>v+RS[k][1]).join(' + '),outs=(rc.outs||[[rc.out,1]]).map(([k,v])=>v+RS[k][1]).join(' + '),pl=objs.filter(o=>o.k=='cat'&&o.ci==i),run=pl.filter(o=>o.run).length;return `<div class='row'><img src='${icon(i)}' style='width:64px'><div style='flex:1'><b>${d[1]}</b><div style='font-size:12px'>${ins} ← ${outs} · 30ث</div><div style='font-size:11px;opacity:.75'>سعة الناتج ${rc.oc||10} · مبنية: ${pl.length} · تعمل: ${run}</div></div><button class='btn' data-a='pick' data-i='${i}'>بناء</button></div>`}).join('')}
 function rTruck(){const st=whStock(),tr=objs.filter(o=>o.k=='veh'&&o.role=='truck'),idle=tr.filter(o=>o.st=='idle'&&!o.away&&!o.order),keys=Object.keys(st);keys.forEach(k=>{const m=Math.min(20,st[k]);TO[k]=TO[k]==null?m:Math.min(TO[k],m)});
  const rows=keys.map(k=>`<div class='row'><span style='font-size:24px'>${RS[k][1]}</span><div style='flex:1'><b>${RN[k]||k}</b><div style='font-size:11px;opacity:.75'>المخزون ${st[k]} · السعر ${price(k)}$</div></div><button class='btn gray' data-a='tq' data-k='${k}' data-d='-1'>−</button><b style='min-width:26px;text-align:center'>${TO[k]}</b><button class='btn gray' data-a='tq' data-k='${k}' data-d='1'>＋</button><button class='btn gray' data-a='tq' data-k='${k}' data-d='20'>كل</button></div>`).join('')||`<p style='opacity:.7'>لا توجد منتجات في المستودع العام.</p>`;
  const rev=keys.reduce((a,k)=>a+TO[k]*price(k),0);return `<div class='row'><span style='font-size:28px'>🚚</span><div style='flex:1'>الشاحنات: ${tr.length} · المتاحة: ${idle.length}<div style='font-size:12px'>⛽ الوقود ${fuelHave()} · الرحلة تستهلك 10 براميل · السعة 20 وحدة لكل صنف</div></div></div>${rows}<div class='row'><div style='flex:1'>الإيراد المتوقع: <b>${rev}$</b></div><button class='btn' data-a='send'>🚚 إرسال للبيع</button></div>`}
@@ -764,7 +753,7 @@ function rDet(o){if(!o)return'';if(o.k=='rock')return `<div class='row'><span st
  h+=kv('الموقع','('+(Math.floor(o.x)+1)+'، '+(Math.floor(o.y)+1)+')'+(o.fw?' · '+o.fw+'×'+o.fd:''));
  if(r=='field')h+=kv('الحالة',o.st==0?'💧 تحتاج سقياً':o.st==1?'🌱 تنمو '+Math.min(100,Math.round(o.t*10))+'%':'✅ جاهزة للحصاد')+kv('المنتج',RS[FO[n]][1]+' '+(RN[FO[n]]||''))+kv('الإنتاج','وحدة واحدة لكل حصاد · نمو 10ث');
  else if(r=='pen')h+=kv('الاحتياج',o.need?((o.nw?'💧 ':'')+(o.nf>0?'🌾×'+o.nf:'')||'يُجهّز…'):'لا شيء — بعد '+Math.max(0,Math.ceil(40-(o.tf||0)))+'ث')+kv('العلف لكل دورة',FEED[n]||1)+kv('المنتج',RS[PNM[n]][1]+' '+(RN[PNM[n]]||''))+kv('ناتج ينتظر الجمع',o.out||0);
- else if(r=='proc'){const rc=RC[n];h+=kv('الوصفة',Object.entries(rc.in).map(([k,v])=>v+RS[k][1]).join(' + ')+' ← '+(rc.outs||[[rc.out,1]]).map(([k,v])=>v+RS[k][1]).join(' + ')+' · '+(rc.t||30)+'ث')+bar(o.run?o.pg:0,rc.t||30,'#f2c030');for(const k in rc.in)h+=kv('مخزون '+(RN[k]||k),(o.inv[k]||0)+' / '+icap(rc,k));h+=kv('الناتج',(o.out||0)+' / '+(rc.oc||10))}
+ else if(r=='proc'){const rc=RC[n];h+=kv('الوصفة',Object.entries(rc.in).map(([k,v])=>v+RS[k][1]).join(' + ')+' ← '+(rc.outs||[[rc.out,1]]).map(([k,v])=>v+RS[k][1]).join(' + ')+' · 30ث')+bar(o.run?o.pg:0,30,'#f2c030');for(const k in rc.in)h+=kv('مخزون '+(RN[k]||k),(o.inv[k]||0)+' / '+icap(rc,k));h+=kv('الناتج',(o.out||0)+' / '+(rc.oc||10))}
  else if(r=='prod'){const p=PR[n];h+=kv('المنتج',RS[p.out][1]+' '+(RN[p.out]||''))+bar(o.pg||0,p.t||20,'#f2c030')+kv('كل',(p.t||20)+'ث')+kv('الناتج',o.out||0)}
  else if(STO[r]){const c=o.cap||CAP[r]||100,t=o.inv?tot(o):0,e=Object.entries(o.inv||{}).filter(a=>a[1]>0);h+=kv('السعة',t+' / '+c)+bar(t,c,t>=c?'#e5534b':'')+kv('يخزّن',SG[r]?SG[r].map(x=>RS[x][1]).join(' '):'كل الأصناف (مستودع عام للبيع)')+(e.length?e.map(a=>kv(RS[a[0]][1]+' '+(RN[a[0]]||a[0]),a[1])).join(''):kv('المحتوى','فارغ'))}
  else if(r=='well')h+=kv('الوظيفة','مصدر مياه للسقي');
@@ -800,7 +789,7 @@ setInterval(()=>{if(shKind=='truck'||shKind=='det'||shKind=='fact'){if(shKind=='
 applyRM();
 /* ===== الخلفية الطبيعية: جبال وغابات وأنهار وبحر ===== */
 const BX0=-2000,BY0=-900,BWd=5000,BHt=3300,BK=.5;let BGc=null,RVL=[];
-const pj=(x,y)=>[(x-y)*32,(x+y)*16],COAST_X=(W-H)*32,COAST_Y=(W+H+8)*16,coastY=x=>x<COAST_X?(x-COAST_X)/2+COAST_Y:COAST_Y-(x-COAST_X)/2,baseY=x=>Math.min(Math.abs(x)/2-260,coastY(x)-130);
+const pj=(x,y)=>[(x-y)*32,(x+y)*16],coastY=x=>x<320?x/2+1408:1728-x/2,baseY=x=>Math.min(Math.abs(x)/2-260,coastY(x)-130);
 function clampCam(){const s=cam.s,vw=cw/s,vh=ch/s;let L=-cam.x/s,Tp=-cam.y/s;L=Math.max(BX0,Math.min(BX0+BWd-vw,L));Tp=Math.max(BY0,Math.min(BY0+BHt-vh,Tp));cam.x=-L*s;cam.y=-Tp*s}
 function mkBG(){const c=document.createElement('canvas');c.width=BWd*BK;c.height=BHt*BK;const g=c.getContext('2d');g.setTransform(BK,0,0,BK,-BX0*BK,-BY0*BK);
  let sd=987654;const rr=()=>(sd=sd*16807%2147483647)/2147483647;
@@ -814,15 +803,15 @@ function mkBG(){const c=document.createElement('canvas');c.width=BWd*BK;c.height
   if(snow)for(let i=1;i<pts.length-1;i++){const p=pts[i];if(p[1]<pts[i-1][1]&&p[1]<pts[i+1][1]&&(baseY(p[0])-off-p[1])>hm*.62){P2([[p[0],p[1]],[p[0]-46,p[1]+62],[p[0]-14,p[1]+50],[p[0]+8,p[1]+66],[p[0]+44,p[1]+60]],'rgba(255,255,255,.92)');P2([[p[0],p[1]],[p[0]+44,p[1]+60],[p[0]+8,p[1]+66]],'rgba(190,205,225,.9)')}}
   for(let i=0;i<nt;i++){const x=BX0+rr()*BWd,idx=Math.max(0,Math.min(pts.length-1,Math.round((x-BX0)/40))),ty=pts[idx][1],by=baseY(x)-off+20,y=ty+hm*.18+rr()*(by-ty-hm*.18);if(y<ty)continue;const s=7+rr()*7;g.fillStyle=tc[(rr()*tc.length)|0];g.beginPath();g.moveTo(x,y-s*2);g.lineTo(x-s*.75,y);g.lineTo(x+s*.75,y);g.fill()}};
  ridge(330,420,'#9fb3c8','#c4d3df',true,0,1.3,[]);ridge(210,340,'#4d6a52','#2f5a3a',true,1700,4.1,['#2f6a3a','#285a34','#3a7a42','#245030']);ridge(90,190,'#4f8a45','#3f7a3a',false,1900,7.7,['#3f8f45','#2f7a3a','#52a050','#2a6a34']);
- const lt=[];for(let x=BX0;x<=X1;x+=80)lt.push([x,baseY(x)-30]);gr=g.createLinearGradient(0,-300,0,1600);gr.addColorStop(0,'#5f9a48');gr.addColorStop(1,'#7cb85a');P2([...lt,[X1,coastY(X1)+20],[COAST_X,COAST_Y+20],[BX0,coastY(BX0)+20]],gr);
+ const lt=[];for(let x=BX0;x<=X1;x+=80)lt.push([x,baseY(x)-30]);gr=g.createLinearGradient(0,-300,0,1600);gr.addColorStop(0,'#5f9a48');gr.addColorStop(1,'#7cb85a');P2([...lt,[X1,coastY(X1)+20],[320,1588],[BX0,coastY(BX0)+20]],gr);
  const pal=['rgba(110,170,70,.35)','rgba(150,190,80,.3)','rgba(80,140,70,.35)','rgba(190,200,110,.25)'];
  for(let i=0;i<900;i++){const x=-75+rr()*125,y=-75+rr()*115;if(!(x<-1||y<-1))continue;const q=pj(x,y);if(q[1]<baseY(q[0])-20)continue;g.fillStyle=pal[i%4];g.beginPath();g.ellipse(q[0],q[1],60+rr()*140,30+rr()*70,0,0,7);g.fill()}
- gr=g.createLinearGradient(0,400,0,Y1);gr.addColorStop(0,'#4fc3d4');gr.addColorStop(.35,'#1f86b8');gr.addColorStop(1,'#0b3563');P2([[BX0,coastY(BX0)],[COAST_X,COAST_Y],[X1,coastY(X1)],[X1,Y1],[BX0,Y1]],gr);
- P2([pj(-80,H),pj(W,H),pj(W,H+4),pj(-80,H+4)],'#e8d6a0');P2([pj(W,-40),pj(W+4,-40),pj(W+4,H+4),pj(W,H+4)],'#e8d6a0');P2([pj(-80,H+3),pj(W,H+3),pj(W,H+4),pj(-80,H+4)],'#cdb88a');P2([pj(W+3,-40),pj(W+4,-40),pj(W+4,H+4),pj(W+3,H+4)],'#cdb88a');
- const inRiver=(x,y)=>{if(y>-16&&y<H+5){const xc=-5-1.3*Math.sin(y*.24),w=1.6+Math.max(0,y+14)/(H+18)*2.8;if(Math.abs(x-xc)<w/2+1.3)return true}if(x>-7&&x<W+5){const yc=-5+1.3*Math.sin(x*.21+1),w=1.5+Math.max(0,x+5)/(W+9.5)*2.4;if(Math.abs(y-yc)<w/2+1.3)return true}return false};
- const tr=[];for(let i=0;i<5200;i++){const x=-75+rr()*(W+74),y=-75+rr()*(H+74);if(!(x<-2||y<-2)||x>W-1||y>H-1||inRiver(x,y))continue;const q=pj(x,y);if(q[1]<baseY(q[0])-30||q[0]<BX0||q[0]>X1)continue;tr.push([q[0],q[1],rr()])}
+ gr=g.createLinearGradient(0,400,0,Y1);gr.addColorStop(0,'#4fc3d4');gr.addColorStop(.35,'#1f86b8');gr.addColorStop(1,'#0b3563');P2([[BX0,coastY(BX0)],[320,1568],[X1,coastY(X1)],[X1,Y1],[BX0,Y1]],gr);
+ P2([pj(-80,40),pj(54,40),pj(54,44),pj(-80,44)],'#e8d6a0');P2([pj(50,-40),pj(54,-40),pj(54,44),pj(50,44)],'#e8d6a0');P2([pj(-80,43),pj(54,43),pj(54,44),pj(-80,44)],'#cdb88a');P2([pj(53,-40),pj(54,-40),pj(54,44),pj(53,44)],'#cdb88a');
+ const inRiver=(x,y)=>{if(y>-16&&y<45){const xc=-5-1.3*Math.sin(y*.24),w=1.6+Math.max(0,y+14)/58.5*2.8;if(Math.abs(x-xc)<w/2+1.3)return true}if(x>-7){const yc=-5+1.3*Math.sin(x*.21+1),w=1.5+Math.max(0,x+5)/59.5*2.4;if(Math.abs(y-yc)<w/2+1.3)return true}return false};
+ const tr=[];for(let i=0;i<5200;i++){const x=-75+rr()*124,y=-75+rr()*113;if(!(x<-2||y<-2)||x>49||y>39||inRiver(x,y))continue;const q=pj(x,y);if(q[1]<baseY(q[0])-30||q[0]<BX0||q[0]>X1)continue;tr.push([q[0],q[1],rr()])}
  tr.sort((a,b)=>a[1]-b[1]);tr.forEach(([sx,sy,v])=>{const r=7+(sy+900)/3300*8;g.fillStyle='rgba(0,0,0,.18)';g.beginPath();g.ellipse(sx+3,sy+2,r*1.1,r*.45,0,0,7);g.fill();g.fillStyle=v>.93?'#c98a2a':v>.8?'#6bb14a':v>.4?'#3f8f45':'#2f7a3a';g.beginPath();g.arc(sx,sy-r*.9,r,0,7);g.fill();g.fillStyle='rgba(255,255,255,.12)';g.beginPath();g.arc(sx-r*.3,sy-r*1.2,r*.55,0,7);g.fill()});
- const rvA=[],rvB=[];for(let y=-14;y<=H+4.5;y+=.5){rvA.push({x:-5-1.3*Math.sin(y*.24),y,w:1.6+(y+14)/(H+18)*2.8})}for(let x=-5;x<=W+4.5;x+=.5){rvB.push({x,y:-5+1.3*Math.sin(x*.21+1),w:1.5+(x+5)/(W+9.5)*2.4})}
+ const rvA=[],rvB=[];for(let y=-14;y<=44.5;y+=.5){rvA.push({x:-5-1.3*Math.sin(y*.24),y,w:1.6+(y+14)/58.5*2.8})}for(let x=-5;x<=54.5;x+=.5){rvB.push({x,y:-5+1.3*Math.sin(x*.21+1),w:1.5+(x+5)/59.5*2.4})}
  const strip=(arr,hor,k,col)=>{const A=[],B=[];arr.forEach(p=>{const w=p.w*k/2;A.push(hor?pj(p.x-w,p.y):pj(p.x,p.y-w));B.push(hor?pj(p.x+w,p.y):pj(p.x,p.y+w))});P2([...A,...B.reverse()],col)};
  [[rvA,true],[rvB,false]].forEach(([a,h])=>{strip(a,h,1.5,'#4a7a3a');strip(a,h,1,'#2f86bd');strip(a,h,.55,'#5cc0e0')});
  RVL=[rvA.map(p=>pj(p.x,p.y)),rvB.map(p=>pj(p.x,p.y))];return c}
@@ -870,7 +859,7 @@ function riderDraw(o,t){const [sx,sy]=P(o.x,o.y),f=o.fx||1,mv=o.walk?1:0,b=mv?Ma
  ctx.restore();
  if(o.car){const e=o.car=='bucket'?'🪣':o.car=='log'?'🪵':RS[o.car]?RS[o.car][1]:'';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#000';ctx.fillText(e+(o.n>1?o.n:''),sx,sy-66)}} const wk2=DRAW.worker;DRAW.worker=(o,t)=>o.role=='rider'?riderDraw(o,t):wk2(o,t);
 function go(w,tx,ty,dt){const dx=tx-w.x,dy=ty-w.y,l=Math.hypot(dx,dy);if(l<.07)return true;const s=Math.min(l,(w.spd||(w.role=='rider'?3.6:1.7))*dt);w.x+=dx/l*s;w.y+=dy/l*s;w.mvg+=dt*10;w.walk=true;w.fx=dx-dy>=0?1:-1;return false}
-function aiR(w,dt){if(!w.steps){w.riderTask=true;let s=plan(w);w.riderTask=false;if(!s){const r0=w.role;w.role='farm';s=plan(w);if(!s){w.role='hand';s=plan(w)}w.role=r0}w.steps=s;w.tm=0;if(!s){w.walk=false;return}}aiH(w,dt)}
+function aiR(w,dt){if(!w.steps){const r0=w.role;w.role='hand';let s=plan(w);if(!s){w.role='farm';s=plan(w)}w.role=r0;w.steps=s;w.tm=0;if(!s){w.walk=false;return}}aiH(w,dt)}
 function update(dt){[...objs].forEach(o=>{if(o.k=='worker')(o.role=='wood'?aiW:o.role=='rider'?aiR:aiH)(o,dt);if(HS[o.role]&&o.mv&&!o.sp&&onRoad(o)){o.sp=1;spawnFor(o)}tick(o,dt)});hud()}
 function roadAt(x,y){const dirt=ITEMS[placing-1][2]=='Dirt Road',pr=priceOf(placing-1);if(!((T[x][y]==0&&!OBJ[x][y])||(T[x][y]==1&&RT[x][y]!=(dirt?1:0))))return;if(money<pr){toast('رصيدك لا يكفي لبناء الطريق ('+pr+'$ للمربع)');return}money-=pr;T[x][y]=1;RT[x][y]=dirt?1:0}
 function pickVeh(px,py){const wx=(px-cam.x)/cam.s,wy=(py-cam.y)/cam.s;let v=null,bd=40;objs.forEach(q=>{if((q.k=='veh'&&!q.away)||(q.k=='worker'&&q.role=='rider')){const s=P(q.x,q.y),d=Math.hypot(s[0]-wx,s[1]-16-wy);if(d<bd){bd=d;v=q}}});return v}
@@ -887,7 +876,7 @@ function tap(px,py){const p=pick(px,py),info=toast;
  sel=p;info(p?'المربع ('+(p.x+1)+'، '+(p.y+1)+') — '+NAMES[T[p.x][p.y]]:'خارج الأرض')}
 function selectItem(i){delMode=false;$('bd').classList.remove('on');placing=i+1;mov=null;closeSheet();toast('المس الأرض لشراء ووضع: '+ITEMS[i][1]+' — '+priceOf(i).toLocaleString()+'$')}
 function rBuild(){const cs=CATS.map((c,i)=>ITEMS.some(d=>d[0]==i&&!HIDE.has(d[2]))?`<button class='${i==bcat?'on':''}' data-a='cat' data-i='${i}'>${c[0]} ${c[1]}</button>`:'').join('');const its=ITEMS.map((d,i)=>[d,i]).filter(([d])=>d[0]==bcat&&!HIDE.has(d[2])).map(([d,i])=>`<div class='row' style='flex-direction:column;margin:0;text-align:center;font-size:12px;cursor:pointer' data-a='pick' data-i='${i}'><img src='${icon(i)}' style='width:100%'><div>${d[1]}</div><div style='color:#c98a00;font-weight:700'>💰 ${priceOf(i).toLocaleString()}$${/Road/.test(d[2])?' / مربع':''}</div></div>`).join('');return `<div class='cats'>${cs}</div><div class='g'>${its}</div>`}
-function rFact(){return Object.keys(RC).map(n=>{const i=ITEMS.findIndex(d=>d[2]==n);if(i<0)return'';const rc=RC[n],d=ITEMS[i],ins=Object.entries(rc.in).map(([k,v])=>v+RS[k][1]).join(' + '),outs=(rc.outs||[[rc.out,1]]).map(([k,v])=>v+RS[k][1]).join(' + '),pl=objs.filter(o=>o.k=='cat'&&o.ci==i),run=pl.filter(o=>o.run).length;return `<div class='row'><img src='${icon(i)}' style='width:64px'><div style='flex:1'><b>${d[1]}</b><div style='font-size:12px'>${ins} ← ${outs} · ${rc.t||30}ث</div><div style='font-size:11px;opacity:.75'>سعة الناتج ${rc.oc||10} · مبنية: ${pl.length} · تعمل: ${run}</div><div style='font-size:12px;color:#c98a00;font-weight:700'>💰 ${priceOf(i).toLocaleString()}$</div></div><button class='btn' data-a='pick' data-i='${i}'>شراء</button></div>`}).join('')}
+function rFact(){return Object.keys(RC).map(n=>{const i=ITEMS.findIndex(d=>d[2]==n);if(i<0)return'';const rc=RC[n],d=ITEMS[i],ins=Object.entries(rc.in).map(([k,v])=>v+RS[k][1]).join(' + '),outs=(rc.outs||[[rc.out,1]]).map(([k,v])=>v+RS[k][1]).join(' + '),pl=objs.filter(o=>o.k=='cat'&&o.ci==i),run=pl.filter(o=>o.run).length;return `<div class='row'><img src='${icon(i)}' style='width:64px'><div style='flex:1'><b>${d[1]}</b><div style='font-size:12px'>${ins} ← ${outs} · 30ث</div><div style='font-size:11px;opacity:.75'>سعة الناتج ${rc.oc||10} · مبنية: ${pl.length} · تعمل: ${run}</div><div style='font-size:12px;color:#c98a00;font-weight:700'>💰 ${priceOf(i).toLocaleString()}$</div></div><button class='btn' data-a='pick' data-i='${i}'>شراء</button></div>`}).join('')}
 function rTruck(){const st=whStock(),keys=Object.keys(st);keys.forEach(k=>{TO[k]=Math.min(20,st[k])});const rows=keys.map(k=>`<div class='row'><span style='font-size:24px'>${RS[k][1]}</span><b style='flex:1'>${RN[k]||k}</b><b>${st[k]}${st[k]>20?' ← 20':''}</b></div>`).join('')||`<p style='opacity:.7'>المستودع فارغ.</p>`;return rows+`<button class='btn' data-a='send' style='width:100%;margin-top:6px'>بيع</button>`}
 mkBG();
 
@@ -900,7 +889,7 @@ setInterval(()=>{objs.forEach(p=>{if(p.role!='well'||!p.fw||ITEMS[p.ci][2]!='Wel
 function thrDraw(){const n=performance.now();for(let i=THR.length-1;i>=0;i--){const a=THR[i];if(n<a.s)continue;const k=(n-a.s)/a.d;if(k>=1){THR.splice(i,1);continue}const p=P(a.a[0]+(a.b[0]-a.a[0])*k,a.a[1]+(a.b[1]-a.a[1])*k),yy=p[1]-Math.sin(k*Math.PI)*80-14;ctx.font='17px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#000';ctx.fillText(a.ic,p[0],yy)}}
 function sendTruck(){toast('الإرسال تلقائي: عند وجود 10 وحدات نهائية قابلة للبيع في مستودع، تُرمى إلى الشاحنة (10 براميل نفط)')}
 /* final (manufactured) products only; raw crops, ores, animal products, feed, fuel and energy are never sold */
-const FINAL=new Set(['flour','bread','cake','candy','choco','wine','meal','jam','plank','fabric','pot','glass','steel','fuel','bat','egg','milk','wool','honey']),SELL=k=>FINAL.has(k)&&price(k)>0,TRIP=40;
+const FINAL=new Set(['bread','cake','candy','choco','wine','meal','jam','plank','fabric','pot','glass','steel']),SELL=k=>FINAL.has(k)&&price(k)>0,TRIP=40;
 Object.assign(PREF,{bread:['wh'],cake:['wh'],candy:['wh'],choco:['wh'],wine:['wh'],meal:['wh'],jam:['wh'],plank:['wh'],fabric:['wh'],pot:['wh'],glass:['wh']});
 const _dv=DRAW.veh;DRAW.veh=(o,t)=>{if(o.hid)return;_dv(o,t)};
 function truckSell(o){let best=null,bn=0,mx=0;
